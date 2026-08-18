@@ -208,14 +208,11 @@
     sw.appendChild(autoBtn);
 
     TIERS.forEach(function (t) {
-      var def = C ? C.tier[t] : { label: t, view: "？", op: "？" };
+      var def = C ? C.tier[t] : { label: t };
       var b = document.createElement("button");
-      b.className = "rk-tierbar-btn";
+      b.className = "rk-tierbar-btn plain";
       b.dataset.setTier = t;
-      var tbd = function (v) { return v === "？" ? ' class="tbd"' : ""; };
-      b.innerHTML = "<strong>" + def.label + "</strong>" +
-        '<span class="rk-metric">表示<b' + tbd(def.view) + ">" + def.view + "</b></span>" +
-        '<span class="rk-metric">操作<b' + tbd(def.op) + ">" + def.op + "</b></span>";
+      b.innerHTML = "<strong>" + def.label + "</strong>";
       b.addEventListener("click", function () {
         write(K_AUTO, "0");
         write(K_TIER, t);

@@ -67,26 +67,16 @@ body.device-web    [data-device]:not([data-device~="web"]) { display: none !impo
 .rk-tierbar-btn:hover  { background: #fff; border-color: var(--rk-silver); }
 .rk-tierbar-btn:active { transform: scale(.97); }
 .rk-tierbar-btn strong { display: block; font-size: 12.5px; margin-bottom: 4px; }
-/* 中身が見出しだけのボタン（自動）は、文字を上下中央に置く */
-.rk-tierbar-btn.plain { display: flex; align-items: center; justify-content: center; }
+/* 表示モードのボタンは見出しだけ。上下中央に置く */
+.rk-tierbar-btn.plain { display: flex; align-items: center; justify-content: center; min-height: 46px; }
 .rk-tierbar-btn.plain strong { margin-bottom: 0; }
 .rk-tierbar-btn[aria-pressed="true"]        { background: var(--rk-brand-soft); border-color: var(--rk-brand); }
 .rk-tierbar-btn[aria-pressed="true"] strong { color: var(--rk-brand); }
-.rk-metric {
-  display: flex; justify-content: space-between; align-items: baseline;
-  font-size: 10px; color: var(--rk-ink-3); padding: 1px 0;
-}
-.rk-metric b { font-size: 10.5px; font-weight: 700; color: var(--rk-ink-2); }
-.rk-metric + .rk-metric { border-top: 1px dashed var(--rk-silver-line); }
-.rk-tierbar-btn[aria-pressed="true"] .rk-metric b { color: var(--rk-brand); }
 .rk-tierbar-note {
   font-size: 10px; color: var(--rk-ink-3); line-height: 1.6;
   margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rk-silver-line);
 }
 .rk-tierbar-note b { color: var(--rk-ink-2); }
-
-/* しきい値が未定（"？"）のときの見せ方 */
-.rk-metric b.tbd { color: var(--rk-brand); letter-spacing: .05em; }
 
 /* --- 2b. 表示デバイスの切替 --- */
 .rk-devbar-switch { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
