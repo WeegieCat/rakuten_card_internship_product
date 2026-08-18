@@ -42,19 +42,16 @@
                 background: #f4f5f7;
             }
 
-            header.appbar {
-                background: linear-gradient(135deg, var(--brand), #e84c3d);
-                color: #fff;
-                padding: 18px 16px;
-                font-size: 18px;
-                font-weight: bold;
-                text-align: center;
-                border-radius: 0 0 24px 24px;
-                box-shadow: 0 8px 24px rgba(191, 0, 0, 0.25);
-                position: sticky;
-                top: 0;
-                z-index: 100;
+
+            /* ===== ヘッダー（家計簿と同じ） ===== */
+            header.hero {
+              background: linear-gradient(135deg, var(--brand), #e84c3d);
+              color: #fff; padding: 18px 16px 20px;
+              border-radius: 0 0 24px 24px; box-shadow: 0 8px 24px rgba(191,0,0,.25);
             }
+            header.hero .mini { font-size: 10.5px; opacity: .85; letter-spacing: .1em; }
+            header.hero h1 { font-size: 22px; margin: 4px 0 6px; }
+            header.hero p { font-size: 12px; opacity: .95; line-height: 1.6; }
 
             .container {
                 padding: 14px;
@@ -323,7 +320,11 @@
     </head>
     <body data-screen="profile">
         <div class="app">
-            <header class="appbar" id="appTitle">登録情報</header>
+            <header class="hero">
+                <div class="mini">RAKUTEN CARD APP</div>
+                <h1 id="appTitle">登録情報</h1>
+                <p>登録内容の確認と変更、表示設定はこちらから行えます。</p>
+            </header>
 
             <div class="container">
                 <!-- ============ 一覧（全種別で全項目を表示） ============ -->
