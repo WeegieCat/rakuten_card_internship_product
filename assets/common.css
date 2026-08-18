@@ -1,0 +1,378 @@
+/* =========================================================================
+   全画面共通の部品
+   ・ユーザー種別（ライト／ミドル／ヘビー）による情報量の出し分け
+   ・5タブの下部ナビ
+   ・AIチャットボット（右下）
+   ヘッダーと各画面固有のデザインには手を入れていません。
+   ========================================================================= */
+
+:root {
+  --rk-brand:      #bf0000;
+  --rk-brand-dark: #8e0000;
+  --rk-brand-soft: #fff0f0;
+  --rk-brand-line: #f3caca;
+  --rk-warm:       #e8590c;
+  --rk-warm-soft:  #fff4ec;
+  --rk-warm-line:  #ffd8bd;
+  --rk-silver:     #8a9099;
+  --rk-silver-soft:#f1f3f5;
+  --rk-silver-line:#dfe3e8;
+  --rk-ink:        #222;
+  --rk-ink-2:      #555;
+  --rk-ink-3:      #888;
+  --rk-nav-h:      62px;
+}
+
+/* 下部ナビとチャットボットの分だけ余白を確保する */
+body { padding-bottom: calc(var(--rk-nav-h) + 24px) !important; }
+
+/* -------------------------------------------------------------------------
+   1. 情報量の出し分け
+   data-tier="light mid heavy" のように、表示したい種別を空白区切りで指定する。
+   指定のない要素は常に表示される（＝ユーザー自身の「事実」は隠さない）。
+   ------------------------------------------------------------------------- */
+body.tier-light [data-tier]:not([data-tier~="light"]),
+body.tier-mid   [data-tier]:not([data-tier~="mid"]),
+body.tier-heavy [data-tier]:not([data-tier~="heavy"]) { display: none !important; }
+
+/* デバイスによる出し分け。data-device="web" は Web版でだけ出る付加項目 */
+body.device-mobile [data-device]:not([data-device~="mobile"]),
+body.device-web    [data-device]:not([data-device~="web"]) { display: none !important; }
+
+/* -------------------------------------------------------------------------
+   2. 種別切替バー（確認用・アプリ外UI）
+   ------------------------------------------------------------------------- */
+.rk-tierbar {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
+               "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
+  max-width: 480px;
+  margin: 10px auto;
+  background: #fff;
+  border: 1px solid var(--rk-silver-line);
+  border-radius: 12px;
+  padding: 11px 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  color: var(--rk-ink);
+}
+.rk-tierbar-label { font-size: 11px; color: var(--rk-ink-3); margin-bottom: 8px; }
+.rk-tierbar-switch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rk-tierbar-btn {
+  font: inherit; color: inherit; cursor: pointer;
+  border: 1px solid var(--rk-silver-line);
+  background: var(--rk-silver-soft);
+  border-radius: 8px; padding: 8px 7px;
+  text-align: center; line-height: 1.35;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.rk-tierbar-btn:hover  { background: #fff; border-color: var(--rk-silver); }
+.rk-tierbar-btn:active { transform: scale(.97); }
+.rk-tierbar-btn strong { display: block; font-size: 12.5px; margin-bottom: 4px; }
+/* 中身が見出しだけのボタン（自動）は、文字を上下中央に置く */
+.rk-tierbar-btn.plain { display: flex; align-items: center; justify-content: center; }
+.rk-tierbar-btn.plain strong { margin-bottom: 0; }
+.rk-tierbar-btn[aria-pressed="true"]        { background: var(--rk-brand-soft); border-color: var(--rk-brand); }
+.rk-tierbar-btn[aria-pressed="true"] strong { color: var(--rk-brand); }
+.rk-metric {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 10px; color: var(--rk-ink-3); padding: 1px 0;
+}
+.rk-metric b { font-size: 10.5px; font-weight: 700; color: var(--rk-ink-2); }
+.rk-metric + .rk-metric { border-top: 1px dashed var(--rk-silver-line); }
+.rk-tierbar-btn[aria-pressed="true"] .rk-metric b { color: var(--rk-brand); }
+.rk-tierbar-note {
+  font-size: 10px; color: var(--rk-ink-3); line-height: 1.6;
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rk-silver-line);
+}
+.rk-tierbar-note b { color: var(--rk-ink-2); }
+
+/* しきい値が未定（"？"）のときの見せ方 */
+.rk-metric b.tbd { color: var(--rk-brand); letter-spacing: .05em; }
+
+/* --- 2b. 表示デバイスの切替 --- */
+.rk-devbar-switch { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.rk-devbar-btn {
+  font: inherit; color: inherit; cursor: pointer;
+  border: 1px solid var(--rk-silver-line); background: var(--rk-silver-soft);
+  border-radius: 8px; padding: 9px 7px; text-align: center; line-height: 1.35;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.rk-devbar-btn:hover  { background: #fff; border-color: var(--rk-silver); }
+.rk-devbar-btn:active { transform: scale(.97); }
+.rk-devbar-btn strong { display: block; font-size: 12.5px; margin-bottom: 3px; }
+.rk-devbar-btn span   { font-size: 10px; color: var(--rk-ink-3); }
+.rk-devbar-btn[aria-pressed="true"]        { background: var(--rk-brand-soft); border-color: var(--rk-brand); }
+.rk-devbar-btn[aria-pressed="true"] strong { color: var(--rk-brand); }
+
+/* --- 2c. キャラクターの切替 --- */
+.rk-charbar-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.rk-charbar-btn {
+  font: inherit; color: inherit; cursor: pointer;
+  border: 1px solid var(--rk-silver-line); background: var(--rk-silver-soft);
+  border-radius: 10px; padding: 8px 4px 7px; text-align: center; line-height: 1.3;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+.rk-charbar-btn:hover  { background: #fff; border-color: var(--rk-silver); }
+.rk-charbar-btn:active { transform: scale(.96); }
+.rk-charbar-btn .face {
+  width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+  background: #fff; border: 1px solid var(--rk-silver-line);
+  display: flex; align-items: center; justify-content: center; font-size: 21px;
+}
+.rk-charbar-btn .face img { width: 100%; height: 100%; object-fit: contain; }
+.rk-charbar-btn span { font-size: 10px; font-weight: 700; color: var(--rk-ink-2); }
+.rk-charbar-btn[aria-pressed="true"]           { background: var(--rk-brand-soft); border-color: var(--rk-brand); }
+.rk-charbar-btn[aria-pressed="true"] span      { color: var(--rk-brand); }
+.rk-charbar-btn[aria-pressed="true"] .face     { border-color: var(--rk-brand); }
+
+/* -------------------------------------------------------------------------
+   3. 下部ナビ（5タブ）
+   ------------------------------------------------------------------------- */
+.rk-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: #fff;
+  border-top: 1px solid var(--rk-silver-line);
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  z-index: 900;
+  box-shadow: 0 -2px 10px rgba(0,0,0,.06);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
+               "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
+}
+.rk-nav a {
+  text-decoration: none;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  font-size: 10px; font-weight: 600; color: var(--rk-ink-3);
+  text-align: center;
+  transition: color .15s, background .15s;
+}
+.rk-nav a .ic { display: block; font-size: 17px; margin-bottom: 3px; line-height: 1; }
+.rk-nav a:hover  { background: var(--rk-silver-soft); color: var(--rk-brand); }
+.rk-nav a.active { color: var(--rk-brand); }
+
+/* -------------------------------------------------------------------------
+   4. AIチャットボット（全画面共通・右下）
+   ------------------------------------------------------------------------- */
+.rk-fab {
+  position: fixed;
+  right: calc(50% - 240px + 16px);
+  bottom: calc(var(--rk-nav-h) + 14px);
+  width: 58px; height: 58px; border-radius: 50%;
+  cursor: pointer; overflow: hidden;
+  /* 背景は白。キャラクターの色は枠線で表す（透過画像がはっきり見えるように） */
+  background: #fff;
+  border: 2px solid var(--rk-brand);
+  color: #fff; font-size: 26px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 20px -6px rgba(0,0,0,.35);
+  z-index: 901;
+  transition: transform .15s, box-shadow .15s;
+}
+@media (max-width: 512px) { .rk-fab { right: 16px; } }
+.rk-fab:hover  { box-shadow: 0 10px 26px -6px rgba(191,0,0,.8); }
+.rk-fab:hover  .rk-fab-inner { transform: scale(1.08); }
+.rk-fab:active .rk-fab-inner { transform: scale(.94); }
+.rk-fab-inner  { transition: transform .15s; }
+
+.rk-chat {
+  position: fixed;
+  right: calc(50% - 240px + 16px);
+  bottom: calc(var(--rk-nav-h) + 80px);
+  width: min(320px, calc(100vw - 32px));
+  background: #fff;
+  border: 1px solid var(--rk-silver-line);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px -12px rgba(0,0,0,.35);
+  z-index: 902;
+  overflow: hidden;
+  display: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
+               "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
+}
+@media (max-width: 512px) { .rk-chat { right: 16px; } }
+.rk-chat.open { display: block; }
+.rk-chat-head {
+  background: linear-gradient(135deg, var(--rk-brand), #e84c3d);
+  color: #fff; padding: 12px 14px;
+  font-size: 13.5px; font-weight: 700;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.rk-chat-close {
+  background: none; border: none; color: #fff;
+  font-size: 18px; cursor: pointer; line-height: 1; padding: 0 2px;
+}
+.rk-chat-body { padding: 13px 14px; font-size: 12.5px; color: var(--rk-ink-2); line-height: 1.7; }
+.rk-chat-bubble {
+  background: var(--rk-silver-soft);
+  border: 1px solid var(--rk-silver-line);
+  border-radius: 12px; padding: 10px 12px; margin-bottom: 10px;
+}
+.rk-chat-suggest { display: flex; flex-direction: column; gap: 6px; }
+.rk-chat-suggest button {
+  font: inherit; text-align: left; cursor: pointer;
+  background: #fff; color: var(--rk-ink-2);
+  border: 1px solid var(--rk-silver-line); border-radius: 999px;
+  padding: 8px 12px; font-size: 12px;
+  transition: all .15s;
+}
+.rk-chat-suggest button:hover { border-color: var(--rk-brand); color: var(--rk-brand); background: var(--rk-brand-soft); }
+
+/* -------------------------------------------------------------------------
+   5. トースト
+   ------------------------------------------------------------------------- */
+.rk-toast {
+  position: fixed; left: 50%; bottom: calc(var(--rk-nav-h) + 24px);
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(34,34,34,.94); color: #fff;
+  font-size: 12px; padding: 10px 15px; border-radius: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .18s, transform .18s;
+  z-index: 950; max-width: 88%; text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
+               "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
+}
+.rk-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* -------------------------------------------------------------------------
+   6. チャットボットのキャラクター表示
+   ------------------------------------------------------------------------- */
+.rk-chat-avatar {
+  width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex: none;
+  background: #fff; border: 2px solid rgba(255,255,255,.65);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.rk-chat-avatar img { width: 100%; height: 100%; object-fit: contain; }
+.rk-chat-head-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rk-chat-head-name { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.rk-chat-head-sub  { font-size: 10px; opacity: .85; font-weight: 500; }
+.rk-fab-face { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.rk-fab-inner {
+  width: 47px; height: 47px; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; line-height: 1;
+}
+
+/* -------------------------------------------------------------------------
+   7. Web版レイアウト
+   ホワイトボードの「PC版＝最重要項目＋付加項目」を、
+   幅を広げる／2段組にする／ナビを上に出す、の3点で表現しています。
+   ------------------------------------------------------------------------- */
+body.device-web { padding-bottom: 40px !important; padding-top: 0 !important; }
+
+body.device-web .rk-tierbar { max-width: 1120px; }
+body.device-web .rk-tierbar-switch { grid-template-columns: repeat(3, 1fr); }
+
+/* ナビは上部に横並びで固定 */
+body.device-web .rk-nav {
+  position: sticky; bottom: auto; top: 0; left: auto; transform: none;
+  width: 100%; max-width: 1120px; margin: 0 auto 14px;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: none; border-bottom: 1px solid var(--rk-silver-line);
+  border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.07);
+  overflow: hidden;
+}
+body.device-web .rk-nav a { padding: 13px 0; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+body.device-web .rk-nav a .ic { display: inline; font-size: 17px; margin: 0; }
+body.device-web .rk-nav a.active { background: var(--rk-brand-soft); }
+
+/* 本体の幅を広げ、カードを2段組にする */
+body.device-web .app,
+body.device-web .container { max-width: 1120px !important; margin: 0 auto; }
+body.device-web .content,
+body.device-web .container > *:not(.rk-nav),
+body.device-web .detail-content { max-width: none; }
+
+/* 2段組にしたい要素に data-web-cols、その中で横幅いっぱいに使いたい要素に data-web-full */
+body.device-web [data-web-cols] {
+  column-count: 2; column-gap: 20px; padding: 18px 20px 24px;
+}
+body.device-web [data-web-cols] > * { break-inside: avoid; }
+body.device-web [data-web-full] { column-span: all; }
+
+/* ページ固有の要素をWeb幅に合わせる */
+body.device-web .card,
+body.device-web .section,
+body.device-web .box { margin-left: 0; margin-right: 0; margin-bottom: 20px; }
+body.device-web .table-wrap,
+body.device-web .txn-list,
+body.device-web .result-count,
+body.device-web .section-title { margin-left: 0; margin-right: 0; }
+body.device-web table { min-width: 0; }
+body.device-web th, body.device-web td { font-size: 13px; }
+
+/* 端末フレーム風の角丸ヘッダーはWebでは平らにする */
+body.device-web header.hero,
+body.device-web header.appbar { border-radius: 12px 12px 0 0; }
+
+/* チャットボットは画面の右端に寄せる */
+body.device-web .rk-fab  { right: 24px; bottom: 24px; }
+body.device-web .rk-chat { right: 24px; bottom: 92px; width: 360px; }
+body.device-web .rk-toast { bottom: 24px; }
+body.device-web .mascot-wrap { left: 24px; bottom: 24px; }
+
+@media (max-width: 900px) {
+  body.device-web [data-web-cols] { column-count: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rk-fab, .rk-toast, .rk-tierbar-btn, .rk-devbar-btn, .rk-charbar-btn, .rk-nav a { transition: none !important; }
+}
+
+/* -------------------------------------------------------------------------
+   8. 年末サマリー画面ではチャットボットを隠す（プレイヤーの操作と重なるため）
+   ------------------------------------------------------------------------- */
+body[data-screen="recap"] .rk-fab,
+body[data-screen="recap"] .rk-chat { display: none !important; }
+
+/* -------------------------------------------------------------------------
+   9. キャラクターを押したときの、ゆるやかなアニメーション
+   ------------------------------------------------------------------------- */
+/* 動くのは中のパンダだけ。丸いボタンはその場に留まる。 */
+@keyframes rk-panda-press {
+  0%   { transform: scale(1)    rotate(0deg)  translateY(0); }
+  18%  { transform: scale(1.18) rotate(-7deg) translateY(-8%); }
+  40%  { transform: scale(0.94) rotate(6deg)  translateY(3%); }
+  62%  { transform: scale(1.08) rotate(-3deg) translateY(-3%); }
+  82%  { transform: scale(0.98) rotate(1deg)  translateY(0); }
+  100% { transform: scale(1)    rotate(0deg)  translateY(0); }
+}
+.rk-fab.pressed .rk-fab-inner { animation: rk-panda-press .85s cubic-bezier(.28,.7,.32,1) both; }
+
+/* 動いているあいだだけ、丸からはみ出しても切り取らない */
+.rk-fab.pressed { overflow: visible; }
+
+
+/* 知らせがあるときは、やわらかく光る */
+@keyframes rk-fab-glow {
+  0%, 100% { box-shadow: 0 8px 20px -6px rgba(0,0,0,.35); }
+  50%      { box-shadow: 0 8px 26px -4px rgba(232,89,12,.75); }
+}
+.rk-fab.notify { animation: rk-fab-glow 2.2s ease-in-out infinite; }
+
+/* チャットもふわっと開く */
+@keyframes rk-chat-in {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+.rk-chat.open { animation: rk-chat-in .32s cubic-bezier(.2,.7,.3,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rk-fab, .rk-fab.notify, .rk-chat.open,
+  .rk-fab.pressed .rk-fab-inner { animation: none !important; }
+  .rk-fab-inner { transition: none !important; }
+}
+
+/* -------------------------------------------------------------------------
+   10. 画面幅にあわせてキャラクターの大きさを変える
+   ------------------------------------------------------------------------- */
+.rk-fab       { width: clamp(52px, 13vw, 64px); height: clamp(52px, 13vw, 64px); }
+.rk-fab-inner { width: clamp(42px, 10.6vw, 52px); height: clamp(42px, 10.6vw, 52px); }
+body.device-web .rk-fab       { width: 68px; height: 68px; }
+body.device-web .rk-fab-inner { width: 56px; height: 56px; }
+
+/* -------------------------------------------------------------------------
+   11. 登録情報ページの「表示設定」
+   ------------------------------------------------------------------------- */
+.rk-set-block + .rk-set-block { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rk-silver-line); }
+.rk-set-title { font-size: 13.5px; font-weight: bold; color: var(--rk-ink); margin-bottom: 3px; }
+.rk-set-note  { font-size: 11.5px; color: var(--rk-ink-3); line-height: 1.65; margin-bottom: 9px; }
+.rk-set-note b { color: var(--rk-ink-2); }

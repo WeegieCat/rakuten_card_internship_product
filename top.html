@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TOP | 楽天カードアプリ改修案</title>
+<link rel="stylesheet" href="assets/common.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand: #bf0000; --brand-dark: #8e0000; --brand-soft: #fff0f0; --brand-line: #f3caca;
+    --warm: #e8590c; --warm-soft: #fff4ec; --warm-line: #ffd8bd;
+    --silver: #8a9099; --silver-soft: #f1f3f5; --silver-line: #dfe3e8;
+    --good: #1a7f4b; --good-soft: #edf9f2;
+    --ink: #222; --ink-2: #555; --ink-3: #888; --bg: #f4f5f7;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
+  }
+
+  body { background: #f4f5f7; color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .num { font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  .app { max-width: 480px; margin: 0 auto; background: var(--bg); min-height: 100vh; }
+
+  .appbar {
+    background: var(--brand); color: #fff;
+    padding: 15px 16px; text-align: center;
+    font-size: 18px; font-weight: bold; letter-spacing: .04em;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .content { padding: 14px; }
+
+  .card { background: #fff; border-radius: 14px; padding: 15px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .card-title { font-size: 15.5px; font-weight: bold; color: var(--brand); display: flex; align-items: center; gap: 6px; }
+  .more {
+    font-size: 12px; font-weight: 600; color: var(--ink-3);
+    background: none; border: none; padding: 4px 6px; border-radius: 6px;
+    text-decoration: none; transition: background .15s, color .15s;
+  }
+  .more:hover { background: var(--brand-soft); color: var(--brand); }
+  .sub { font-size: 11.5px; color: var(--ink-3); }
+  .divider { height: 1px; background: #eee; margin: 12px 0; }
+
+  /* 券面 */
+  .plastic {
+    position: relative; border-radius: 12px; padding: 15px 16px 14px;
+    color: #fff; overflow: hidden;
+    background: linear-gradient(135deg, #d4121a 0%, var(--brand) 45%, #7d0000 100%);
+    box-shadow: 0 6px 16px -6px rgba(140,0,0,.6);
+  }
+  .plastic::after {
+    content: ""; position: absolute; top: -60%; left: -20%;
+    width: 70%; height: 220%;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.22) 50%, rgba(255,255,255,0) 100%);
+    transform: rotate(18deg); pointer-events: none;
+  }
+  .plastic-top { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; letter-spacing: .06em; opacity: .95; }
+  .chip { width: 30px; height: 21px; border-radius: 4px; margin: 14px 0 10px;
+          background: linear-gradient(135deg, #f0e2b0 0%, #cfae5e 50%, #ede0ae 100%);
+          box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+  .plastic-num { font-size: 15.5px; letter-spacing: 2.5px; font-weight: 600; }
+  .plastic-foot { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px; font-size: 11px; opacity: .92; }
+  .plastic-foot .brand-mark { font-size: 15px; font-style: italic; font-weight: 700; letter-spacing: .5px; }
+
+  /* 残高 */
+  .balance { background: var(--silver-soft); border: 1px solid var(--silver-line); border-radius: 12px; padding: 13px 14px; margin-top: 12px; }
+  .balance-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .balance-label { font-size: 12.5px; color: var(--ink-2); }
+  .balance-value { font-size: 24px; font-weight: bold; letter-spacing: -.02em; }
+  .track { height: 7px; border-radius: 4px; background: #dfe3e8; overflow: hidden; margin-top: 10px; }
+  .fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--warm), var(--brand)); }
+  .track-note { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink-3); margin-top: 5px; }
+
+  /* 明細行 */
+  .txn { display: flex; align-items: center; gap: 9px; padding: 9px 6px; border-radius: 8px; font-size: 13px; transition: background .15s; }
+  .txn:hover { background: var(--silver-soft); }
+  .txn .date { font-size: 11px; color: var(--ink-3); width: 38px; flex: none; }
+  .txn .store { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .txn .amt { font-weight: 600; flex: none; }
+  .tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; flex: none; border: 1px solid; }
+
+  /* カテゴリ内訳 */
+  .breakdown { display: flex; flex-direction: column; gap: 8px; }
+  .bd-row { display: grid; grid-template-columns: 92px 1fr 66px; align-items: center; gap: 8px; font-size: 11.5px; }
+  .bd-bar { height: 8px; border-radius: 4px; background: #eceff2; overflow: hidden; }
+  .bd-bar i { display: block; height: 100%; border-radius: 4px; }
+  .bd-amt { text-align: right; color: var(--ink-2); font-weight: 600; }
+
+  /* 推移 */
+  .trend { display: flex; align-items: flex-end; gap: 10px; height: 84px; padding: 0 2px; }
+  .trend-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+  .trend-bar { width: 100%; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, #ff8a8a, var(--brand)); transition: filter .15s; }
+  .trend-col:hover .trend-bar { filter: brightness(1.12); }
+  .trend-bar.past { background: linear-gradient(180deg, #c8ced6, var(--silver)); }
+  .trend-label { font-size: 10px; color: var(--ink-3); }
+  .trend-val { font-size: 10px; color: var(--ink-2); font-weight: 600; }
+
+  /* キャンペーン */
+  .cp { display: flex; align-items: center; gap: 12px; padding: 11px 10px; border-radius: 10px; border: 1px solid #eee;
+        margin-bottom: 8px; text-decoration: none; color: inherit;
+        transition: border-color .15s, background .15s, transform .1s; }
+  .cp:hover { border-color: var(--brand-line); background: var(--brand-soft); transform: translateX(2px); }
+  .cp-rate { flex: none; width: 60px; text-align: center; font-size: 21px; font-weight: 800; color: var(--brand); line-height: 1.1; }
+  .cp-rate span { font-size: 11px; font-weight: 700; display: block; }
+  .cp-body { flex: 1; min-width: 0; }
+  .cp-genre { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px;
+              background: var(--silver-soft); color: var(--ink-2); border: 1px solid var(--silver-line); }
+  .cp-genre.match { background: var(--brand-soft); color: var(--brand); border-color: var(--brand-line); }
+  .cp-name { font-size: 13px; font-weight: 600; margin: 4px 0 2px; }
+  .cp-limit { font-size: 11px; color: var(--ink-3); }
+  .cp-limit b { color: var(--warm); }
+  .chips { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .chip-btn { font-size: 11px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--silver-line);
+              background: #fff; color: var(--ink-2); transition: all .15s; }
+  .chip-btn:hover { border-color: var(--brand); color: var(--brand); }
+  .chip-btn.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+  /* 支払 */
+  .pay-main { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 12px; }
+  .pay-main .lbl { font-size: 12px; color: var(--ink-2); }
+  .pay-main .due { font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+  .pay-main .amt { font-size: 26px; font-weight: bold; letter-spacing: -.02em; }
+
+  .alert { display: flex; gap: 10px; align-items: flex-start; border-radius: 10px; padding: 11px 12px;
+           background: var(--warm-soft); border: 1px solid var(--warm-line); margin-top: 4px; }
+  .alert .ic { width: 22px; height: 22px; border-radius: 50%; flex: none; background: var(--warm); color: #fff;
+               display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+  .alert-title { font-size: 13px; font-weight: 700; color: var(--warm); margin-bottom: 2px; }
+  .alert-desc { font-size: 11.5px; color: var(--ink-2); line-height: 1.55; }
+  .alert a { color: var(--brand); font-weight: 700; }
+
+  .btn-primary { width: 100%; margin-top: 11px; background: var(--brand); color: #fff; border: none; border-radius: 9px;
+                 padding: 12px; font-size: 13.5px; font-weight: bold; transition: background .15s, transform .1s; }
+  .btn-primary:hover { background: var(--brand-dark); }
+  .btn-ghost { display: block; width: 100%; margin-top: 9px; background: #fff; color: var(--ink-2); text-align: center;
+               text-decoration: none; border: 1px solid var(--silver-line); border-radius: 9px; padding: 10px;
+               font-size: 12.5px; font-weight: 600; transition: all .15s; }
+  .btn-ghost:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+
+  .kv { display: flex; justify-content: space-between; font-size: 12.5px; padding: 7px 0; }
+  .kv .k { color: var(--ink-2); display: flex; align-items: center; gap: 7px; }
+  .kv .v { font-weight: 600; }
+  .kv + .kv { border-top: 1px dashed #eee; }
+
+  /* ポイント */
+  .pt-main { display: flex; align-items: baseline; gap: 6px; }
+  .pt-value { font-size: 30px; font-weight: bold; color: var(--brand); letter-spacing: -.02em; }
+  .pt-unit { font-size: 14px; font-weight: 700; color: var(--brand); }
+  .pt-expire { margin-top: 11px; border-radius: 10px; padding: 11px 12px; background: var(--silver-soft);
+               border: 1px solid var(--silver-line); font-size: 12px; color: var(--ink-2); }
+  .pt-expire.urgent { background: var(--warm-soft); border-color: var(--warm-line); }
+  .pt-expire b { color: var(--warm); font-weight: 700; }
+
+  .foot-note { text-align: center; font-size: 10.5px; color: #9aa0a6; line-height: 1.7; padding: 2px 0 6px; }
+
+
+  /* 年末サマリーの入口 */
+  .recap-entry {
+    background: linear-gradient(135deg, #7d0000 0%, var(--brand) 45%, var(--warm) 100%);
+    border-radius: 16px; padding: 15px; margin-bottom: 14px; color: #fff;
+    box-shadow: 0 10px 26px -10px rgba(191,0,0,.7);
+    position: relative; overflow: hidden;
+  }
+  .recap-entry::after {
+    content: ""; position: absolute; top: -60%; left: -20%; width: 60%; height: 220%;
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.16), rgba(255,255,255,0));
+    transform: rotate(18deg); pointer-events: none;
+  }
+  .recap-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .recap-title { font-size: 15.5px; font-weight: bold; display: flex; align-items: center; gap: 7px; }
+  .recap-badge {
+    font-size: 10px; font-weight: 700; background: rgba(255,255,255,.22);
+    border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: 3px 9px; white-space: nowrap;
+  }
+  .recap-lead { font-size: 11.5px; opacity: .92; line-height: 1.65; margin: 7px 0 12px; }
+  .recap-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: relative; z-index: 1; }
+  .recap-btn {
+    display: block; text-decoration: none; text-align: center; border-radius: 11px;
+    padding: 11px 8px; line-height: 1.35; transition: transform .1s, background .15s;
+    background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); color: #fff;
+  }
+  .recap-btn:hover  { background: rgba(255,255,255,.28); }
+  .recap-btn:active { transform: scale(.97); }
+  .recap-btn.short  { background: #fff; color: var(--brand); border-color: #fff; }
+  .recap-btn.short:hover { background: #ffeaea; }
+  .recap-btn strong { display: block; font-size: 13.5px; margin-bottom: 3px; }
+  .recap-btn span   { display: block; font-size: 10px; opacity: .8; }
+
+  /* Web版だけに出すサマリ */
+  .web-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .web-summary .item { background: var(--silver-soft); border: 1px solid var(--silver-line); border-radius: 10px; padding: 12px; }
+  .web-summary .k { font-size: 11px; color: var(--ink-3); margin-bottom: 5px; }
+  .web-summary .v { font-size: 19px; font-weight: bold; letter-spacing: -.02em; }
+  .web-summary .s { font-size: 10.5px; color: var(--ink-3); margin-top: 3px; }
+  @media (max-width: 720px) { .web-summary { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body data-screen="top">
+
+<div class="app">
+  <header class="appbar">TOP</header>
+
+  <div class="content" data-web-cols>
+
+    <!-- ===== 年末サマリーの入口（TOPの最上部・年末限定） =====
+         情報量の出し分けはしません。ライトでもヘビーでも同じ内容です。 -->
+    <div class="recap-entry" id="recapEntry" data-web-full hidden>
+      <div class="recap-head">
+        <div class="recap-title"><span>🎞</span><span id="recapTitle"></span></div>
+        <span class="recap-badge">年末限定</span>
+      </div>
+      <div class="recap-lead" id="recapLead"></div>
+      <div class="recap-btns">
+        <a class="recap-btn short" data-rk-link="recap.html?mode=short" href="recap.html?mode=short">
+          <strong id="recapShortLabel"></strong><span id="recapShortSub"></span>
+        </a>
+        <a class="recap-btn basic" data-rk-link="recap.html?mode=basic" href="recap.html?mode=basic">
+          <strong id="recapBasicLabel"></strong><span id="recapBasicSub"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Web版だけに出す全体サマリ（PC＝最重要項目＋付加項目） -->
+    <div class="card" data-device="web" data-web-full>
+      <div class="card-head"><div class="card-title"><span>📊</span>今月のサマリ</div></div>
+      <div id="webSummary" class="web-summary"></div>
+    </div>
+
+    <!-- ============ ① 利用明細 ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span>🧾</span>利用明細</div>
+        <a class="more" data-rk-link="detail.html" href="detail.html">すべて見る ›</a>
+      </div>
+
+      <div class="plastic">
+        <div class="plastic-top"><span>RAKUTEN CARD</span><span id="cardMonth"></span></div>
+        <div class="chip"></div>
+        <div class="plastic-num num" id="cardNum"></div>
+        <div class="plastic-foot"><span id="cardName"></span><span class="brand-mark" id="cardBrand"></span></div>
+      </div>
+
+      <!-- 残り利用可能額：ユーザー自身の事実なので全種別で表示 -->
+      <div class="balance">
+        <div class="balance-row">
+          <span class="balance-label">残り利用可能額</span>
+          <span class="balance-value num" id="remaining"></span>
+        </div>
+        <div data-tier="mid heavy">
+          <div class="track"><div class="fill" id="usageFill"></div></div>
+          <div class="track-note">
+            <span>今月のご利用 <b class="num" id="usedText"></b><span id="usedCount"></span></span>
+            <span class="num" id="limitText"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 使いすぎアラート：一次責任は明細画面。ここは要約と導線のみ -->
+      <div id="overAlert"></div>
+
+      <div data-tier="mid heavy">
+        <div class="divider"></div>
+        <div class="sub" style="margin-bottom:4px" id="recentLabel"></div>
+        <div id="recentList"></div>
+      </div>
+
+      <div data-tier="heavy">
+        <div class="divider"></div>
+        <div class="sub" style="margin-bottom:9px">カテゴリ内訳</div>
+        <div class="breakdown" id="breakdown"></div>
+
+        <div class="divider"></div>
+        <div class="sub" style="margin-bottom:9px">ご利用額の推移（直近3ヶ月）</div>
+        <div class="trend" id="trend"></div>
+      </div>
+    </div>
+
+    <!-- ============ ② キャンペーン ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span>🎁</span>キャンペーン</div>
+        <a class="more" data-rk-link="campaign.html" href="campaign.html">すべて見る ›</a>
+      </div>
+
+      <div class="sub" style="margin-bottom:9px" data-tier="mid heavy" id="cpLead"></div>
+
+      <div class="chips" data-tier="heavy">
+        <button class="chip-btn on" data-sort="reco">おすすめ順</button>
+        <button class="chip-btn" data-sort="rate">還元率順</button>
+        <button class="chip-btn" data-sort="deadline">期限が近い順</button>
+      </div>
+
+      <div id="cpList"></div>
+
+      <a class="btn-ghost" data-tier="heavy" data-rk-link="campaign.html" href="campaign.html">
+        旅行・グルメのキャンペーンも見る
+      </a>
+    </div>
+
+    <!-- ============ ③ 支払 ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span>💳</span>支払</div>
+        <a class="more" data-tier="mid heavy" data-rk-link="detail.html" href="detail.html">明細を見る ›</a>
+      </div>
+
+      <div class="pay-main">
+        <div>
+          <div class="lbl">次回のお支払い</div>
+          <div class="due" id="payDue"></div>
+        </div>
+        <div class="amt num" id="payAmount"></div>
+      </div>
+
+      <!-- 未払いアラート：損失につながるため全種別で表示 -->
+      <div id="unpaidAlert"></div>
+
+      <div data-tier="mid heavy">
+        <div class="kv"><span class="k">お支払い方法</span><span class="v" id="payBank"></span></div>
+      </div>
+
+      <div data-tier="heavy">
+        <div class="divider"></div>
+        <div class="sub" style="margin-bottom:3px">お支払い方法の内訳</div>
+        <div id="methodBreakdown"></div>
+      </div>
+
+      <button class="btn-primary" data-toast="お支払い手続き画面へ">お支払い手続きへ</button>
+      <button class="btn-ghost" data-tier="heavy" data-toast="あとから分割／リボの変更画面へ">
+        あとから支払い方法を変更する
+      </button>
+    </div>
+
+    <!-- ============ ④ ポイント ============ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><span>🅿️</span>ポイント</div>
+        <a class="more" data-tier="mid heavy" data-rk-link="security.html" href="security.html">ポイント設定 ›</a>
+      </div>
+
+      <div class="pt-main">
+        <span class="pt-value num" id="ptTotal"></span><span class="pt-unit">ポイント</span>
+      </div>
+
+      <!-- 失効アラート：損失につながるため全種別で表示 -->
+      <div id="ptExpire"></div>
+
+      <div data-tier="heavy">
+        <div class="divider"></div>
+        <div class="kv"><span class="k">今月の獲得ポイント</span><span class="v num" id="ptEarned"></span></div>
+        <div class="kv"><span class="k">キャンペーン加算分</span><span class="v num" id="ptBonus"></span></div>
+        <div class="kv"><span class="k" id="ptLimitedLabel"></span><span class="v num" id="ptLimitedVal" style="color:var(--warm)"></span></div>
+        <div class="kv"><span class="k" id="ptNormalLabel"></span><span class="v num" id="ptNormalVal"></span></div>
+      </div>
+
+      <button class="btn-primary" data-tier="mid heavy" data-toast="ポイントの使い道を見る">ポイントを使う</button>
+    </div>
+
+    <div class="foot-note">
+      データ分析に基づくTOP画面プロトタイプ<br>Rakuten-AI Workshop 2026「アクティブ・サラダボウル」
+    </div>
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/common.js"></script>
+<script>
+(function () {
+  var C = APP.C, yen = APP.yen;
+  var u = APP.usage(APP.MONTHS[0].key);
+  var items = u.month.items;
+
+  /* ---- 券面 ---- */
+  document.getElementById("cardNum").textContent   = "**** **** **** " + C.user.last4;
+  document.getElementById("cardName").textContent  = C.user.nameEn;
+  document.getElementById("cardBrand").textContent = C.user.brand;
+  document.getElementById("cardMonth").textContent = u.month.label;
+
+  /* ---- 残高・利用率 ---- */
+  document.getElementById("remaining").textContent = yen(u.remaining);
+  document.getElementById("usageFill").style.width = Math.min(u.rate, 100) + "%";
+  document.getElementById("usedText").textContent  = yen(u.used);
+  document.getElementById("usedCount").textContent = "（" + u.count + "件）";
+  document.getElementById("limitText").textContent = "限度額 " + yen(u.limit);
+
+  /* ---- 使いすぎアラート（一次責任は明細画面）---- */
+  if (u.level !== "safe") {
+    document.getElementById("overAlert").innerHTML =
+      '<div class="alert"><div class="ic">!</div><div>' +
+      '<div class="alert-title">ご利用枠の' + Math.round(u.rate) + '%に到達しています</div>' +
+      '<div class="alert-desc">残り <b class="num">' + yen(u.remaining) + '</b>。' +
+      '<a data-rk-link="detail.html" href="detail.html">明細で内訳を見る ›</a></div></div></div>';
+  }
+
+  /* ---- 直近のご利用 ---- */
+  function tagHtml(method) {
+    var m = C.methodColor[method];
+    return '<span class="tag" style="background:' + m.bg + ';color:' + m.fg + ';border-color:' + m.bd + '">' + m.short + "</span>";
+  }
+  function renderRecent(n) {
+    document.getElementById("recentLabel").textContent = "直近のご利用（" + n + "件）";
+    document.getElementById("recentList").innerHTML = items.slice(0, n).map(function (x) {
+      return '<div class="txn"><span class="date num">' + x.date.slice(5).replace("-", "/") + "</span>" +
+             '<span class="store">' + x.shop + "</span>" + tagHtml(x.payment) +
+             '<span class="amt num">' + yen(x.amount) + "</span></div>";
+    }).join("");
+  }
+
+  /* ---- カテゴリ内訳 ---- */
+  var cats = APP.groupSum(items, "category");
+  document.getElementById("breakdown").innerHTML = cats.map(function (c) {
+    var w = Math.round((c.amount / u.used) * 100);
+    return '<div class="bd-row"><span>' + c.key + "</span>" +
+           '<span class="bd-bar"><i style="width:' + w + "%;background:" + (C.categoryColor[c.key] || "#8a9099") + '"></i></span>' +
+           '<span class="bd-amt num">' + yen(c.amount) + "</span></div>";
+  }).join("");
+
+  /* ---- 推移 ---- */
+  var tr = APP.trend();
+  var max = Math.max.apply(null, tr.map(function (t) { return t.total; }));
+  document.getElementById("trend").innerHTML = tr.map(function (t, i) {
+    var isNow = i === tr.length - 1;
+    return '<div class="trend-col"><span class="trend-val num">' + yen(t.total) + "</span>" +
+           '<div class="trend-bar' + (isNow ? "" : " past") + '" style="height:' + Math.round((t.total / max) * 100) + '%"></div>' +
+           '<span class="trend-label">' + t.short + "</span></div>";
+  }).join("");
+
+  /* ---- キャンペーン（よく使うカテゴリを優先）---- */
+  var myCat = APP.topGenre();   /* キャンペーン画面のジャンル（旅行／ショッピング／グルメ）に合わせる */
+  var sorted = {
+    reco: APP.CAMPAIGNS.slice().sort(function (a, b) {
+      var am = a.genre === myCat ? 1 : 0, bm = b.genre === myCat ? 1 : 0;
+      return (bm - am) || (b.rate - a.rate);
+    }),
+    rate: APP.CAMPAIGNS.slice().sort(function (a, b) { return b.rate - a.rate; }),
+    deadline: APP.CAMPAIGNS.slice().sort(function (a, b) { return APP.daysUntil(a.to) - APP.daysUntil(b.to); })
+  };
+  var cpSort = "reco";
+
+  function renderCampaigns(n) {
+    document.getElementById("cpLead").textContent = "よく使うジャンル「" + myCat + "」からおすすめ";
+    document.getElementById("cpList").innerHTML = sorted[cpSort].slice(0, n).map(function (c) {
+      var left = APP.daysUntil(c.to);
+      var match = c.genre === myCat;
+      return '<a class="cp" href="' + c.url + '" target="_blank" rel="noopener noreferrer">' +
+             '<div class="cp-rate">' + c.rate + "<span>%還元</span></div>" +
+             '<div class="cp-body">' +
+             '<span class="cp-genre' + (match ? " match" : "") + '">' + c.genre + (match ? " ・ よく使う" : "") + "</span>" +
+             '<div class="cp-name">' + c.store + (c.featured ? "　★注目" : "") + "</div>" +
+             '<div class="cp-limit">' + c.to.replace(/-/g, "/") + "まで ／ 残り <b class=\"num\">" + left + "日</b></div>" +
+             "</div></a>";
+    }).join("");
+  }
+
+  document.querySelectorAll("[data-sort]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("[data-sort]").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      cpSort = b.dataset.sort;
+      render();
+    });
+  });
+
+  /* ---- 支払 ---- */
+  document.getElementById("payDue").textContent    = RK.ymd(C.payment.due) + " ご請求分";
+  document.getElementById("payAmount").textContent = yen(u.used);
+  document.getElementById("payBank").textContent   = C.payment.bank + " ****" + C.payment.bankLast4;
+
+  if (C.unpaid.amount > 0) {
+    document.getElementById("unpaidAlert").innerHTML =
+      '<div class="alert"><div class="ic">!</div><div>' +
+      '<div class="alert-title">お支払いが残っています</div>' +
+      '<div class="alert-desc">未払い残高 <b class="num">' + yen(C.unpaid.amount) + "</b>／お支払い期日 <b>" +
+      RK.md(C.unpaid.due) + "</b>（あと" + APP.daysUntil(C.unpaid.due) + "日）</div></div></div>";
+  }
+
+  var methods = APP.groupSum(items, "payment");
+  /* 手数料は「分割・リボ残高の年率15%相当を12で割った額」という仮置きです */
+  var revolving = methods.filter(function (m) { return m.key !== "1回払い"; })
+                         .reduce(function (s, m) { return s + m.amount; }, 0);
+  var fee = Math.round(revolving * 0.15 / 12);
+  document.getElementById("methodBreakdown").innerHTML =
+    methods.map(function (m) {
+      return '<div class="kv"><span class="k">' + tagHtml(m.key) + m.key + "</span>" +
+             '<span class="v num">' + yen(m.amount) + "</span></div>";
+    }).join("") +
+    '<div class="kv"><span class="k">お支払い手数料（今回分・概算）</span>' +
+    '<span class="v num" style="color:var(--warm)">' + yen(fee) + "</span></div>";
+
+  /* ---- ポイント（一次責任はセキュリティ画面）---- */
+  var p = C.points;
+  document.getElementById("ptTotal").textContent  = p.total.toLocaleString("ja-JP");
+  document.getElementById("ptEarned").textContent = "+" + p.earnedThisMonth.toLocaleString("ja-JP") + "pt";
+  document.getElementById("ptBonus").textContent  = "+" + p.campaignBonus.toLocaleString("ja-JP") + "pt";
+  document.getElementById("ptLimitedLabel").textContent = p.limitedExpire.replace(/-/g, "/") + " 失効予定";
+  document.getElementById("ptLimitedVal").textContent   = p.limited.toLocaleString("ja-JP") + "pt";
+  document.getElementById("ptNormalLabel").textContent  = p.normalExpire.replace(/-/g, "/") + " 失効予定";
+  document.getElementById("ptNormalVal").textContent    = p.normal.toLocaleString("ja-JP") + "pt";
+
+  var leftDays = APP.daysUntil(p.limitedExpire);
+  if (leftDays <= p.alertDays) {
+    document.getElementById("ptExpire").innerHTML =
+      '<div class="pt-expire urgent"><b class="num">' + p.limited.toLocaleString("ja-JP") + "pt</b> が <b>" +
+      RK.md(p.limitedExpire) + "</b>（残り <b class=\"num\">" + leftDays + "日</b>）に失効します</div>";
+  }
+
+
+  /* ---- 年末サマリーの入口（年末だけ表示）---- */
+  if (APP.isRecapSeason()) {
+    var rc = C.recap;
+    document.getElementById("recapEntry").hidden = false;
+    document.getElementById("recapTitle").textContent = rc.year + "年のふりかえり";
+    document.getElementById("recapLead").textContent =
+      "この1年のお買いものを、動画のようにまとめました。見たい長さを選んでください。";
+    document.getElementById("recapShortLabel").textContent = rc.modes.short.label;
+    document.getElementById("recapShortSub").textContent   = rc.modes.short.sub + " ／ " + rc.modes.short.note;
+    document.getElementById("recapBasicLabel").textContent = rc.modes.basic.label;
+    document.getElementById("recapBasicSub").textContent   = rc.modes.basic.sub + " ／ " + rc.modes.basic.note;
+  }
+
+  /* ---- Web版だけに出すサマリ ---- */
+  var prev = APP.MONTHS[1] ? APP.usage(APP.MONTHS[1].key) : null;
+  var diff = prev ? u.used - prev.used : 0;
+  document.getElementById("webSummary").innerHTML =
+    '<div class="item"><div class="k">今月のご利用</div><div class="v num">' + yen(u.used) +
+      '</div><div class="s">' + u.count + "件 ／ 利用率 " + u.rate + "%</div></div>" +
+    '<div class="item"><div class="k">前月比</div><div class="v num" style="color:' +
+      (diff > 0 ? "var(--warm)" : "var(--good)") + '">' + (diff > 0 ? "+" : "") + yen(diff) +
+      '</div><div class="s">' + (prev ? prev.month.short + " " + yen(prev.used) : "-") + "</div></div>" +
+    '<div class="item"><div class="k">残り利用可能額</div><div class="v num">' + yen(u.remaining) +
+      '</div><div class="s">限度額 ' + yen(u.limit) + "</div></div>" +
+    '<div class="item"><div class="k">保有ポイント</div><div class="v num">' + C.points.total.toLocaleString("ja-JP") +
+      'pt</div><div class="s">期間限定 ' + C.points.limited.toLocaleString("ja-JP") + "pt が " +
+      RK.md(C.points.limitedExpire) + "失効</div></div>";
+
+  /* ---- 種別に応じた件数の出し分け ---- */
+  function currentTier() {
+    if (document.body.classList.contains("tier-heavy")) return "heavy";
+    if (document.body.classList.contains("tier-mid"))   return "mid";
+    return "light";
+  }
+  function render() {
+    var tier = currentTier();
+    renderRecent(tier === "heavy" ? 5 : 3);
+    renderCampaigns(tier === "light" ? 1 : tier === "mid" ? 2 : 3);
+    RK.refreshLinks();
+  }
+  render();
+  document.addEventListener("rk:state", render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ご利用明細 | 楽天カードアプリ改修案</title>
+  <link rel="stylesheet" href="assets/common.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #bf0000; --brand-dark: #980000; --warm: #e8590c;
+      --ink: #222; --ink-2: #555; --ink-3: #777;
+      --line: #e4e7ee;
+    }
+    body {
+      background: #f4f5f7; color: var(--ink);
+      font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", -apple-system, "Noto Sans JP", sans-serif;
+    }
+    button { font: inherit; cursor: pointer; }
+    .num { font-variant-numeric: tabular-nums; }
+
+    .app { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; }
+
+    header.hero {
+      background: linear-gradient(135deg, #bf0000, #e84c3d);
+      color: #fff; padding: 20px 16px;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 8px 24px rgba(191,0,0,.25);
+    }
+    header.hero h1 { font-size: 24px; margin-bottom: 6px; }
+    header.hero p { font-size: 12.5px; opacity: .95; line-height: 1.6; }
+
+    .section-title { font-size: 16px; font-weight: bold; margin: 22px 16px 10px; color: #333; }
+
+    .card {
+      margin: 16px; padding: 18px;
+      border-radius: 16px; background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 4px 14px rgba(0,0,0,.05);
+    }
+    .billing-card { background: #fff4f4; border-color: #ffd2d2; }
+
+    .billing-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .month-btn {
+      width: 34px; height: 34px; border: none; border-radius: 50%;
+      background: var(--brand); color: #fff; font-size: 17px; flex: none;
+      transition: background .2s;
+    }
+    .month-btn:hover:not(:disabled) { background: var(--brand-dark); }
+    .month-btn:disabled { background: #d9c2c2; cursor: default; }
+    .billing-title { font-size: 13.5px; color: var(--ink-3); text-align: center; }
+    .billing-month { font-size: 15px; font-weight: bold; color: #333; }
+
+    .billing-amount { font-size: 32px; font-weight: bold; color: var(--brand); text-align: center; letter-spacing: -.02em; }
+    .billing-date { font-size: 12.5px; color: var(--ink-2); text-align: center; margin-top: 4px; }
+
+    .usage-wrap { margin-top: 16px; }
+    .usage-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
+    .usage-track { height: 10px; background: #f0dede; border-radius: 999px; overflow: hidden; }
+    .usage-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ffb300, #e53935); transition: width .3s ease; }
+    .usage-sub { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-3); margin-top: 6px; }
+
+    .notice { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: 12.5px; line-height: 1.6; }
+    .notice.safe    { background: #edf9f2; border: 1px solid #c7e8d6; color: #14663c; }
+    .notice.notice-lv { background: #fff4ec; border: 1px solid #ffd8bd; color: #9a4a00; }
+    .notice.danger  { background: #fff0f0; border: 1px solid #f3b2b2; color: #b30000; }
+    .notice b { font-weight: 800; }
+
+    /* 検索 */
+    .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { display: block; font-size: 11.5px; color: var(--ink-3); margin-bottom: 5px; font-weight: bold; }
+    .field input, .field select {
+      width: 100%; height: 40px; border: 1px solid #d9dee8; border-radius: 10px;
+      padding: 0 12px; font-size: 13px; background: #fff; font-family: inherit;
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--brand); }
+    .search-actions { display: flex; gap: 10px; margin-top: 14px; }
+    .btn { flex: 1; height: 42px; border: none; border-radius: 10px; font-size: 13px; font-weight: bold; transition: .2s; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-dark); }
+    .btn-secondary { background: #eceff5; color: #444; }
+    .btn-secondary:hover { background: #dde3ec; }
+
+    .result-count { margin: 0 16px 10px; font-size: 12.5px; color: var(--ink-3); }
+
+    /* 明細（ライト：カード型リスト） */
+    .txn-list { margin: 0 16px 16px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .txn-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 12px; border-bottom: 1px solid #eef1f5; font-size: 13px;
+    }
+    .txn-row:last-child { border-bottom: none; }
+    .txn-row:hover { background: #fffafa; }
+    .txn-date { font-size: 11px; color: var(--ink-3); width: 40px; flex: none; }
+    .txn-shop { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .txn-cat  { font-size: 10.5px; color: var(--ink-3); }
+    .txn-amt  { font-weight: bold; color: var(--brand); flex: none; }
+    .badge {
+      display: inline-block; padding: 3px 9px; border-radius: 999px;
+      font-size: 10.5px; font-weight: bold; border: 1px solid; flex: none; min-width: 44px; text-align: center;
+    }
+
+    /* 明細（ミドル・ヘビー：表） */
+    .table-wrap { margin: 0 16px 16px; overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; min-width: 460px; }
+    th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #eef1f5; font-size: 12px; white-space: nowrap; }
+    th { background: #f7f8fb; color: var(--ink-2); font-weight: bold; font-size: 11.5px; }
+    tbody tr:hover { background: #fffafa; }
+    td.amount { font-weight: bold; color: var(--brand); text-align: right; }
+
+    /* 円グラフ */
+    .pie-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .pie { flex: none; }
+    .legend { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
+    .legend-row { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; font-size: 12px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+    .legend-amt { color: var(--ink-2); font-weight: 600; }
+    .legend-pct { color: var(--ink-3); font-size: 11px; margin-left: 4px; }
+
+    .kv { display: flex; justify-content: space-between; font-size: 13px; padding: 9px 0; }
+    .kv + .kv { border-top: 1px dashed #eee; }
+    .kv .v { font-weight: bold; }
+
+    .sim { margin-top: 12px; padding: 13px 14px; border-radius: 12px; background: #fff4ec; border: 1px solid #ffd8bd; }
+    .sim-title { font-size: 13px; font-weight: bold; color: #9a4a00; margin-bottom: 5px; }
+    .sim-desc { font-size: 11.5px; color: var(--ink-2); line-height: 1.6; }
+    .sim button { margin-top: 10px; width: 100%; height: 40px; border: none; border-radius: 9px; background: var(--warm); color: #fff; font-weight: bold; font-size: 12.5px; }
+
+    .empty { padding: 20px 12px; text-align: center; font-size: 13px; color: var(--ink-3); }
+
+    /* 直近1年の棒グラフ（TOP画面と同じ見せ方） */
+    .trend { display: flex; align-items: flex-end; gap: 4px; height: 110px; padding: 0 2px; }
+    .trend-col {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      height: 100%; justify-content: flex-end; background: none; border: none; padding: 0;
+      font: inherit; color: inherit;
+    }
+    .trend-col[data-has="1"] { cursor: pointer; }
+    .trend-bar {
+      width: 100%; border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, #c8ced6, #8a9099);
+      transition: filter .15s;
+    }
+    .trend-col:hover .trend-bar { filter: brightness(1.12); }
+    .trend-col.now .trend-bar { background: linear-gradient(180deg, #ff8a8a, var(--brand)); }
+    .trend-col.top .trend-bar { background: linear-gradient(180deg, #ffd08a, var(--warm)); }
+    .trend-label { font-size: 9px; color: var(--ink-3); }
+    .trend-col.now .trend-label { color: var(--brand); font-weight: bold; }
+    .trend-note { font-size: 11.5px; color: var(--ink-3); line-height: 1.7; margin-top: 10px; }
+    .trend-note b { color: var(--ink-2); }
+  </style>
+</head>
+<body data-screen="detail">
+
+<div class="app">
+  <header class="hero">
+    <h1>ご利用明細</h1>
+    <p>月ごとの支払金額を確認し、表示中の月の明細を一覧で見られます。</p>
+  </header>
+
+  <div class="content" data-web-cols>
+
+  <!-- ===== ご請求予定額（全種別で表示：ユーザー自身の事実） ===== -->
+  <section class="card billing-card" data-web-full>
+    <div class="billing-top">
+      <button class="month-btn" id="prevMonth" aria-label="前の月">＜</button>
+      <div>
+        <div class="billing-title">ご請求予定額</div>
+        <div class="billing-month" id="monthLabel"></div>
+      </div>
+      <button class="month-btn" id="nextMonth" aria-label="次の月">＞</button>
+    </div>
+
+    <div class="billing-amount num" id="billingAmount">¥0</div>
+    <div class="billing-date" id="billingDate"></div>
+
+    <div class="usage-wrap" data-tier="mid heavy">
+      <div class="usage-meta">
+        <span>ご利用額 / 利用可能枠</span>
+        <span class="num" id="usageRate">0%</span>
+      </div>
+      <div class="usage-track"><div class="usage-fill" id="usageFill"></div></div>
+      <div class="usage-sub">
+        <span class="num" id="usageText"></span>
+        <span class="num" id="remainText"></span>
+      </div>
+    </div>
+
+    <!-- 使いすぎ通知：この画面が一次責任。全種別で表示する -->
+    <div class="notice safe" id="statusNotice"></div>
+  </section>
+
+  <!-- ===== 検索（ミドル以上：絞り込みは「選択肢」なので出し分ける） ===== -->
+  <div data-tier="mid heavy">
+    <h2 class="section-title">検索</h2>
+    <section class="card">
+      <div class="search-grid">
+        <div class="field">
+          <label for="categoryFilter">カテゴリ</label>
+          <select id="categoryFilter"><option value="すべて">すべて</option></select>
+        </div>
+        <div class="field">
+          <label for="paymentFilter">決済方法</label>
+          <select id="paymentFilter">
+            <option value="すべて">すべて</option>
+            <option value="1回払い">1回払い</option>
+            <option value="分割">分割</option>
+            <option value="リボ">リボ</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="shopFilter">店舗名</label>
+          <input type="text" id="shopFilter" placeholder="例: コンビニ / 家電 / カフェ" />
+        </div>
+        <div class="field full">
+          <label for="minAmountFilter">いくら以上</label>
+          <input type="number" id="minAmountFilter" placeholder="例: 5000" min="0" />
+        </div>
+      </div>
+      <div class="search-actions">
+        <button class="btn btn-primary" id="searchBtn">検索する</button>
+        <button class="btn btn-secondary" id="resetBtn">リセット</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== 明細一覧（全種別で全件表示） ===== -->
+  <h2 class="section-title">明細一覧</h2>
+  <div class="result-count" id="resultCount"></div>
+
+  <div data-tier="light">
+    <div class="txn-list" id="txnList"></div>
+  </div>
+
+  <div data-tier="mid heavy" data-web-full>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>利用日</th><th>利用店舗</th><th>カテゴリ</th><th style="text-align:right">利用金額</th><th>支払方法</th>
+              <th data-device="web">前月の同カテゴリ</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== 直近1年の推移（TOP画面の棒グラフと同じもの） ===== -->
+  <div data-tier="mid heavy" data-web-full>
+    <h2 class="section-title">直近1年のご利用額</h2>
+    <section class="card">
+      <div class="trend" id="trend"></div>
+      <div class="trend-note" id="trendNote"></div>
+    </section>
+  </div>
+
+  <!-- ===== カテゴリ内訳（ヘビー：アプリ側の「解釈」） ===== -->
+  <div data-tier="heavy">
+    <h2 class="section-title">カテゴリ内訳</h2>
+    <section class="card">
+      <div class="pie-wrap">
+        <svg class="pie" id="pie" width="150" height="150" viewBox="0 0 42 42" role="img" aria-label="カテゴリ別支出の円グラフ"></svg>
+        <div class="legend" id="legend"></div>
+      </div>
+    </section>
+
+    <h2 class="section-title">お支払い方法の内訳</h2>
+    <section class="card">
+      <div id="methodList"></div>
+      <div class="sim">
+        <div class="sim-title">あとから分割／リボに変更できます</div>
+        <div class="sim-desc" id="simDesc"></div>
+        <button data-toast="あとから分割／リボのシミュレーション画面へ">支払い回数をシミュレーションする</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Web版だけに出す月次比較（PC＝最重要項目＋付加項目） -->
+  <section class="card" data-device="web" data-web-full>
+    <h2 class="section-title" style="margin:0 0 10px">カテゴリ別の前月比較</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>カテゴリ</th><th style="text-align:right" id="colCur"></th>
+          <th style="text-align:right" id="colPrev"></th><th style="text-align:right">差額</th><th>推移</th></tr></thead>
+        <tbody id="compareBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/common.js"></script>
+<script>
+(function () {
+  var C = APP.C, yen = APP.yen;
+  var idx = 0;   /* 0 = 最新月 */
+
+  var el = function (id) { return document.getElementById(id); };
+
+  function currentTier() {
+    if (document.body.classList.contains("tier-heavy")) return "heavy";
+    if (document.body.classList.contains("tier-mid"))   return "mid";
+    return "light";
+  }
+
+  function badge(method) {
+    var m = C.methodColor[method];
+    return '<span class="badge" style="background:' + m.bg + ";color:" + m.fg + ";border-color:" + m.bd + '">' + method + "</span>";
+  }
+
+  function filtered(items) {
+    if (currentTier() === "light") return items;   /* ライトには検索UIが無いので全件 */
+    var cat = el("categoryFilter").value;
+    var pay = el("paymentFilter").value;
+    var shop = el("shopFilter").value.trim();
+    var min = Number(el("minAmountFilter").value || 0);
+    return items.filter(function (x) {
+      return (cat === "すべて" || x.category === cat)
+          && (pay === "すべて" || x.payment === pay)
+          && (!shop || x.shop.indexOf(shop) >= 0)
+          && x.amount >= min;
+    });
+  }
+
+  function renderList(items) {
+    if (!items.length) {
+      el("txnList").innerHTML = '<div class="empty">該当する明細はありません。</div>';
+      el("tableBody").innerHTML = '<tr><td colspan="5" class="empty">該当する明細はありません。</td></tr>';
+      return;
+    }
+    el("txnList").innerHTML = items.map(function (x) {
+      return '<div class="txn-row">' +
+             '<span class="txn-date num">' + x.date.slice(5).replace("-", "/") + "</span>" +
+             '<span class="txn-shop">' + x.shop + '<br><span class="txn-cat">' + x.category + "</span></span>" +
+             badge(x.payment) +
+             '<span class="txn-amt num">' + yen(x.amount) + "</span></div>";
+    }).join("");
+
+    /* Web版の追加列：同じカテゴリの前月合計 */
+    var prevMonth = APP.MONTHS[idx + 1];
+    var prevByCat = {};
+    if (prevMonth) APP.groupSum(prevMonth.items, "category").forEach(function (c) { prevByCat[c.key] = c.amount; });
+
+    el("tableBody").innerHTML = items.map(function (x) {
+      return "<tr><td class=\"num\">" + x.date.replace(/-/g, "/") + "</td><td>" + x.shop + "</td><td>" + x.category +
+             '</td><td class="amount num">' + yen(x.amount) + "</td><td>" + badge(x.payment) + "</td>" +
+             '<td class="num" data-device="web" style="color:#888">' +
+             (prevByCat[x.category] != null ? yen(prevByCat[x.category]) : "—") + "</td></tr>";
+    }).join("");
+  }
+
+  /* ---- 直近1年の棒グラフ ----
+     金額は APP.YEAR（年末サマリーと同じ数字）を使う。
+     明細行を持つ月は押すとその月に切り替わる。 */
+  function renderTrend() {
+    var months = APP.YEAR.months;
+    var max = Math.max.apply(null, months.map(function (m) { return m.total; }));
+    var best = months.slice().sort(function (a, b) { return b.total - a.total; })[0];
+    var nowShort = APP.MONTHS[idx].short;
+
+    el("trend").innerHTML = months.map(function (m) {
+      var has = APP.MONTHS.some(function (x) { return x.short === m.short; });
+      var cls = (m.short === nowShort ? " now" : "") + (m.short === best.short ? " top" : "");
+      return '<button class="trend-col' + cls + '" data-short="' + m.short + '" data-has="' + (has ? 1 : 0) +
+             '" title="' + m.short + " " + yen(m.total) + '">' +
+             '<div class="trend-bar" style="height:' + Math.round((m.total / max) * 100) + '%"></div>' +
+             '<span class="trend-label">' + m.short.replace("月", "") + "</span></button>";
+    }).join("");
+
+    var year = months.reduce(function (a, m) { return a + m.total; }, 0);
+    el("trendNote").innerHTML =
+      "1年間の合計 <b>" + yen(year) + "</b>／月あたり平均 <b>" + yen(Math.round(year / 12)) + "</b>。" +
+      "いちばん多かったのは <b>" + best.short + "（" + yen(best.total) + "）</b>です。<br>" +
+      "赤い棒が表示中の月です。明細を見られる月は押すと切り替わります" +
+      "（現在は" + APP.MONTHS.map(function (m) { return m.short; }).join("・") + "のみ実データ）。";
+  }
+
+  /* ---- Web版の月次比較表 ---- */
+  function renderCompare() {
+    var cur = APP.MONTHS[idx], prv = APP.MONTHS[idx + 1];
+    el("colCur").textContent  = cur.short;
+    el("colPrev").textContent = prv ? prv.short : "前月";
+    if (!prv) {
+      el("compareBody").innerHTML = '<tr><td colspan="5" class="empty">比較できる前月のデータがありません。</td></tr>';
+      return;
+    }
+    var a = {}, b = {};
+    APP.groupSum(cur.items, "category").forEach(function (c) { a[c.key] = c.amount; });
+    APP.groupSum(prv.items, "category").forEach(function (c) { b[c.key] = c.amount; });
+    var keys = Object.keys(a).concat(Object.keys(b)).filter(function (v, i, s) { return s.indexOf(v) === i; })
+                .sort(function (x, y) { return (a[y] || 0) - (a[x] || 0); });
+    el("compareBody").innerHTML = keys.map(function (k) {
+      var cv = a[k] || 0, pv = b[k] || 0, d = cv - pv;
+      var mark = d > 0 ? "▲ 増" : d < 0 ? "▼ 減" : "→ 同";
+      var col  = d > 0 ? "#c2410c" : d < 0 ? "#1a7f4b" : "#888";
+      return "<tr><td>" + k + '</td><td class="amount num">' + yen(cv) +
+             '</td><td class="num" style="text-align:right;color:#888">' + yen(pv) +
+             '</td><td class="num" style="text-align:right;color:' + col + '">' + (d > 0 ? "+" : "") + yen(d) +
+             '</td><td style="color:' + col + '">' + mark + "</td></tr>";
+    }).join("");
+  }
+
+  /* ---- 円グラフ（ドーナツ） ---- */
+  function renderPie(items) {
+    var total = APP.total(items);
+    var cats = APP.groupSum(items, "category");
+    var svg = "", legend = "", offset = 25;   /* 25 で 12時方向から開始 */
+    cats.forEach(function (c) {
+      var pct = total ? (c.amount / total) * 100 : 0;
+      var color = C.categoryColor[c.key] || "#8a9099";
+      svg += '<circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="' + color +
+             '" stroke-width="8" stroke-dasharray="' + pct.toFixed(2) + " " + (100 - pct).toFixed(2) +
+             '" stroke-dashoffset="' + offset.toFixed(2) + '"></circle>';
+      offset -= pct;
+      legend += '<div class="legend-row"><span class="legend-dot" style="background:' + color + '"></span>' +
+                "<span>" + c.key + '<span class="legend-pct">' + pct.toFixed(1) + "%</span></span>" +
+                '<span class="legend-amt num">' + yen(c.amount) + "</span></div>";
+    });
+    svg += '<circle cx="21" cy="21" r="11" fill="#fff"></circle>' +
+           '<text x="21" y="20" text-anchor="middle" font-size="4.2" fill="#777">合計</text>' +
+           '<text x="21" y="25.5" text-anchor="middle" font-size="4.6" font-weight="bold" fill="#bf0000">' + yen(total) + "</text>";
+    el("pie").innerHTML = svg;
+    el("legend").innerHTML = legend;
+  }
+
+  /* ---- 支払方法の内訳とシミュレーション導線 ---- */
+  function renderMethods(items) {
+    var ms = APP.groupSum(items, "payment");
+    el("methodList").innerHTML = ms.map(function (m) {
+      return '<div class="kv"><span>' + badge(m.key) + "</span><span class=\"v num\">" + yen(m.amount) + "</span></div>";
+    }).join("");
+
+    /* 1回払いの中でいちばん高額なものを提案対象にする */
+    var once = items.filter(function (x) { return x.payment === "1回払い"; })
+                    .sort(function (a, b) { return b.amount - a.amount; })[0];
+    el("simDesc").textContent = once
+      ? "例：" + once.shop + "（" + yen(once.amount) + "・1回払い）を分割払いに変更すると、月々のご負担を分散できます。"
+      : "1回払いのご利用を、あとから分割払いに変更できます。";
+  }
+
+  /* ---- 描画 ---- */
+  function render() {
+    var m = APP.MONTHS[idx];
+    var u = APP.usage(m.key);
+    var view = filtered(m.items);
+
+    el("monthLabel").textContent    = m.label;
+    el("billingAmount").textContent = yen(u.used);
+    el("billingDate").textContent   = "お支払い予定日：" + m.billingDate;
+
+    el("usageRate").textContent = u.rate + "%";
+    el("usageFill").style.width = Math.min(u.rate, 100) + "%";
+    el("usageText").textContent   = yen(u.used) + " / " + yen(u.limit);
+    el("remainText").textContent  = "残り " + yen(u.remaining);
+
+    var n = el("statusNotice");
+    n.className = "notice " + (u.level === "danger" ? "danger" : u.level === "notice" ? "notice-lv" : "safe");
+    if (u.level === "danger") {
+      n.innerHTML = "⚠ <b>利用可能枠の" + u.rate + "%に到達しています（警告：" + C.alert.warn + "%以上）。</b><br>" +
+                    "今月の追加のご利用は慎重にご確認ください。残り " + yen(u.remaining) + "です。";
+    } else if (u.level === "notice") {
+      n.innerHTML = "⚠ <b>利用可能枠の" + u.rate + "%に到達しました（注意：" + C.alert.notice + "%以上）。</b><br>" +
+                    "ここからは使いすぎにご注意ください。残り " + yen(u.remaining) + "です。";
+    } else {
+      n.innerHTML = "利用可能枠の" + u.rate + "%をご利用中です。残り " + yen(u.remaining) +
+                    "。" + C.alert.notice + "%を超えると通知でお知らせします。";
+    }
+
+    el("resultCount").textContent = view.length === m.items.length
+      ? m.short + "のご利用 " + m.items.length + "件"
+      : m.short + "のご利用 " + m.items.length + "件中 " + view.length + "件を表示";
+
+    renderList(view);
+    renderPie(view);
+    renderMethods(view);
+    renderCompare();
+    renderTrend();
+
+    el("prevMonth").disabled = idx >= APP.MONTHS.length - 1;
+    el("nextMonth").disabled = idx <= 0;
+  }
+
+  /* ---- カテゴリの選択肢 ---- */
+  var cats = {};
+  APP.MONTHS.forEach(function (m) { m.items.forEach(function (x) { cats[x.category] = 1; }); });
+  el("categoryFilter").innerHTML = '<option value="すべて">すべて</option>' +
+    Object.keys(cats).map(function (c) { return '<option value="' + c + '">' + c + "</option>"; }).join("");
+
+  el("prevMonth").addEventListener("click", function () { if (idx < APP.MONTHS.length - 1) { idx++; render(); } });
+  el("nextMonth").addEventListener("click", function () { if (idx > 0) { idx--; render(); } });
+  el("trend").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-short]");
+    if (!b) return;
+    if (b.dataset.has !== "1") { RK.toast(b.dataset.short + "の明細はまだありません"); return; }
+    var i = APP.MONTHS.findIndex(function (m) { return m.short === b.dataset.short; });
+    if (i >= 0) { idx = i; render(); }
+  });
+
+  el("searchBtn").addEventListener("click", render);
+  el("resetBtn").addEventListener("click", function () {
+    el("categoryFilter").value = "すべて";
+    el("paymentFilter").value = "すべて";
+    el("shopFilter").value = "";
+    el("minAmountFilter").value = "";
+    render();
+  });
+
+  render();
+  document.addEventListener("rk:state", render);
+})();
+</script>
+</body>
+</html>

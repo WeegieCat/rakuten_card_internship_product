@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>登録情報 | 楽天カードアプリ改修案</title>
+        <link rel="stylesheet" href="assets/common.css" />
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            :root {
+                --brand: #bf0000;
+                --brand-dark: #8e0000;
+                --warm: #e8590c;
+                --ink: #222;
+                --ink-2: #555;
+                --ink-3: #888;
+                --line: #e6e8ec;
+            }
+            body {
+                background: #f4f5f7;
+                color: var(--ink);
+                font-family:
+                    "Hiragino Sans",
+                    "Yu Gothic UI",
+                    -apple-system,
+                    "Noto Sans JP",
+                    Meiryo,
+                    sans-serif;
+            }
+            button {
+                font: inherit;
+                cursor: pointer;
+            }
+            .app {
+                max-width: 480px;
+                margin: 0 auto;
+                min-height: 100vh;
+                background: #f4f5f7;
+            }
+
+            header.appbar {
+                background: linear-gradient(135deg, var(--brand), #e84c3d);
+                color: #fff;
+                padding: 18px 16px;
+                font-size: 18px;
+                font-weight: bold;
+                text-align: center;
+                border-radius: 0 0 24px 24px;
+                box-shadow: 0 8px 24px rgba(191, 0, 0, 0.25);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+            .container {
+                padding: 14px;
+            }
+            .screen {
+                display: none;
+            }
+            .screen.active {
+                display: block;
+            }
+
+            .card {
+                background: #fff;
+                border-radius: 14px;
+                padding: 15px;
+                margin-bottom: 14px;
+                box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+            }
+            .section-title {
+                font-size: 14.5px;
+                font-weight: bold;
+                color: var(--brand);
+                margin-bottom: 4px;
+            }
+            .section-note {
+                font-size: 11.5px;
+                color: var(--ink-3);
+                line-height: 1.6;
+                margin-bottom: 10px;
+            }
+
+            /* 登録情報の一覧（全項目・常時表示） */
+            .profile-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 11px 2px;
+                border-bottom: 1px dashed #eee;
+                font-size: 13px;
+            }
+            .profile-row:last-child {
+                border-bottom: none;
+            }
+            .profile-row .label {
+                width: 96px;
+                flex: none;
+                color: var(--ink-3);
+                font-size: 12px;
+            }
+            .profile-row .value {
+                flex: 1;
+                min-width: 0;
+                font-weight: 600;
+                word-break: break-all;
+            }
+            .profile-row .updated {
+                flex: none;
+                font-size: 11px;
+                color: var(--ink-3);
+                white-space: nowrap;
+            }
+            .profile-row .edit {
+                flex: none;
+                border: 1px solid var(--line);
+                background: #fff;
+                color: var(--ink-2);
+                border-radius: 999px;
+                padding: 5px 12px;
+                font-size: 11.5px;
+                font-weight: 700;
+                transition: 0.15s;
+            }
+            .profile-row .edit:hover {
+                border-color: var(--brand);
+                color: var(--brand);
+                background: #fff0f0;
+            }
+            .rank {
+                display: inline-block;
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--warm);
+                background: #fff4ec;
+                border: 1px solid #ffd8bd;
+                border-radius: 5px;
+                padding: 1px 5px;
+                margin-left: 6px;
+            }
+
+            .menu-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 13px 4px;
+                border-bottom: 1px solid #f0f0f0;
+                cursor: pointer;
+                transition: background 0.15s;
+            }
+            .menu-item:last-child {
+                border-bottom: none;
+            }
+            .menu-item:hover {
+                background: #fafafa;
+            }
+            .menu-title {
+                font-size: 13.5px;
+                font-weight: 600;
+            }
+            .menu-sub {
+                font-size: 11.5px;
+                color: var(--ink-3);
+                margin-top: 2px;
+            }
+            .arrow {
+                color: #ccc;
+                font-size: 18px;
+            }
+
+            .btn-back {
+                background: none;
+                border: none;
+                color: var(--ink-2);
+                font-size: 13px;
+                padding: 6px 0;
+                margin-bottom: 8px;
+                font-weight: 600;
+            }
+            .btn-back:hover {
+                color: var(--brand);
+            }
+
+            /* フォーム */
+            label.flabel {
+                display: block;
+                font-size: 12px;
+                font-weight: bold;
+                color: var(--ink-2);
+                margin: 12px 0 5px;
+            }
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            input[type="password"] {
+                width: 100%;
+                height: 44px;
+                border: 1px solid #d9dee8;
+                border-radius: 10px;
+                padding: 0 12px;
+                font-size: 15px;
+                font-family: inherit;
+                background: #fff;
+            }
+            input:focus {
+                outline: none;
+                border-color: var(--brand);
+                box-shadow: 0 0 0 3px rgba(191, 0, 0, 0.08);
+            }
+            input.ok {
+                border-color: #1a7f4b;
+                background: #f6fdf9;
+            }
+            input.ng {
+                border-color: var(--brand);
+                background: #fff6f6;
+            }
+            .hint {
+                font-size: 11.5px;
+                color: var(--ink-3);
+                margin-top: 5px;
+                line-height: 1.6;
+            }
+            .err {
+                font-size: 12px;
+                color: var(--brand);
+                margin-top: 6px;
+                font-weight: 700;
+                display: none;
+            }
+            .err.show {
+                display: block;
+            }
+            .err::before {
+                content: "⚠ ";
+            }
+            .row2 {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 8px;
+                align-items: end;
+            }
+            .btn-sub {
+                height: 44px;
+                padding: 0 14px;
+                border: 1px solid var(--line);
+                background: #fff;
+                color: var(--ink-2);
+                border-radius: 10px;
+                font-size: 12.5px;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+            .btn-sub:hover {
+                border-color: var(--brand);
+                color: var(--brand);
+            }
+            .btn-primary {
+                width: 100%;
+                height: 48px;
+                margin-top: 16px;
+                background: var(--brand);
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                font-size: 15px;
+                font-weight: bold;
+                transition: background 0.15s;
+            }
+            .btn-primary:hover:not(:disabled) {
+                background: var(--brand-dark);
+            }
+            .btn-primary:disabled {
+                background: #d8b6b6;
+                cursor: not-allowed;
+            }
+
+            .history-row {
+                display: flex;
+                justify-content: space-between;
+                font-size: 12.5px;
+                padding: 8px 0;
+            }
+            .history-row + .history-row {
+                border-top: 1px dashed #eee;
+            }
+            .history-row .when {
+                color: var(--ink-3);
+            }
+
+            .security-link {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: linear-gradient(135deg, #fff0f0, #fff);
+                border: 1px solid #f3caca;
+                border-radius: 12px;
+                padding: 14px;
+                text-decoration: none;
+                color: inherit;
+                transition: 0.15s;
+            }
+            .security-link:hover {
+                border-color: var(--brand);
+                transform: translateX(2px);
+            }
+            .security-link .t {
+                font-size: 14px;
+                font-weight: bold;
+                color: var(--brand);
+            }
+            .security-link .s {
+                font-size: 11.5px;
+                color: var(--ink-3);
+                margin-top: 3px;
+            }
+        </style>
+    </head>
+    <body data-screen="profile">
+        <div class="app">
+            <header class="appbar" id="appTitle">登録情報</header>
+
+            <div class="container">
+                <!-- ============ 一覧（全種別で全項目を表示） ============ -->
+                <section id="mainScreen" class="screen active" data-web-cols>
+                    <div class="card">
+                        <div class="section-title">現在の登録情報</div>
+                        <div class="section-note">
+                            登録されている内容をすべて表示しています。変更したい行の「変更」を押してください。
+                            並び順は変更エラーが起きやすい項目からです。
+                        </div>
+                        <div id="profileList"></div>
+                    </div>
+
+                    <!-- 表示設定（上部の確認用バーから移設） -->
+                    <div class="card">
+                        <div class="section-title">表示設定</div>
+                        <div class="section-note">
+                            画面に出す情報の量と、チャットボットのキャラクターを選べます。
+                        </div>
+                        <div id="displaySettings"></div>
+                    </div>
+
+                    <!-- セキュリティ画面への遷移（登録情報の第2階層） -->
+                    <div class="card">
+                        <div class="section-title">セキュリティ</div>
+                        <div class="section-note">
+                            カードの一時停止、利用通知、ポイントの失効防止はこちらから設定できます。
+                        </div>
+                        <a
+                            class="security-link"
+                            data-rk-link="security.html"
+                            href="security.html">
+                            <div>
+                                <div class="t">
+                                    🔒 セキュリティ設定・サポート
+                                </div>
+                                <div class="s">
+                                    カード制御／利用通知／ポイント失効防止／セキュリティ診断
+                                </div>
+                            </div>
+                            <span class="arrow">›</span>
+                        </a>
+                    </div>
+
+                    <!-- 変更履歴：アプリ側の付加情報なのでミドル以上 -->
+                    <div class="card" data-tier="mid heavy">
+                        <div class="section-title">変更履歴</div>
+                        <div class="section-note">
+                            直近の変更内容です。身に覚えのない変更があればすぐにご連絡ください。
+                        </div>
+                        <div id="historyList"></div>
+                    </div>
+                </section>
+
+                <!-- ============ 各変更画面 ============ -->
+                <section id="editScreen" class="screen">
+                    <button class="btn-back" id="backBtn">← 戻る</button>
+                    <div class="card" id="editCard"></div>
+                </section>
+            </div>
+        </div>
+
+        <script src="assets/data.js"></script>
+        <script src="assets/common.js"></script>
+        <script>
+            (function () {
+                var el = function (id) {
+                    return document.getElementById(id);
+                };
+
+                /* 現在の登録内容。並び順は registration_changes のエラー件数が多い順
+     （住所6・カード番号6・メール5・パスワード5 → 電話・氏名・口座・秘密の質問） */
+                var profile = [
+                    {
+                        id: "address",
+                        label: "住所",
+                        value: "東京都世田谷区〇〇1-2-3 〇〇マンション101",
+                        rank: "変更が多い",
+                        updated: "2026年4月18日",
+                    },
+                    {
+                        id: "card",
+                        label: "カード番号",
+                        value: "**** **** **** 1234",
+                        rank: "変更が多い",
+                        masked: true,
+                        updated: "2025年11月2日",
+                    },
+                    {
+                        id: "email",
+                        label: "メールアドレス",
+                        value: "rakuten@example.com",
+                        rank: "変更が多い",
+                        updated: "2026年6月2日",
+                    },
+                    {
+                        id: "password",
+                        label: "パスワード",
+                        value: "••••••••",
+                        rank: "変更が多い",
+                        masked: true,
+                        updated: "2026年2月9日",
+                    },
+                    {
+                        id: "phone",
+                        label: "電話番号",
+                        value: "090-1234-5678",
+                        updated: "2024年9月30日",
+                    },
+                    {
+                        id: "bank",
+                        label: "引落口座",
+                        value: "みずほ銀行 普通 ****1234",
+                        masked: true,
+                        updated: "2025年5月14日",
+                    },
+                    {
+                        id: "name",
+                        label: "氏名",
+                        value: "楽天 太郎",
+                        updated: "2019年3月1日",
+                    },
+                    {
+                        id: "birth",
+                        label: "生年月日",
+                        value: "1998年4月12日",
+                        updated: "2019年3月1日",
+                    },
+                    {
+                        id: "secret",
+                        label: "秘密の質問",
+                        value: "設定済み",
+                        updated: "2025年8月8日",
+                    },
+                ];
+
+                var history = [
+                    { what: "メールアドレスを変更", when: "2026年6月2日" },
+                    { what: "住所を変更", when: "2026年4月18日" },
+                    { what: "パスワードを変更", when: "2026年2月9日" },
+                ];
+
+                /* 郵便番号の簡易辞書（デモ用） */
+                var ZIP = {
+                    1540001: "東京都世田谷区池尻",
+                    1000001: "東京都千代田区千代田",
+                    1500002: "東京都渋谷区渋谷",
+                    5300001: "大阪府大阪市北区梅田",
+                };
+
+                /* ---------- 一覧の描画 ---------- */
+                function renderList() {
+                    el("profileList").innerHTML = profile
+                        .map(function (p) {
+                            return (
+                                '<div class="profile-row"><span class="label">' +
+                                p.label +
+                                "</span>" +
+                                '<span class="value">' +
+                                p.value +
+                                "</span>" +
+                                '<span class="updated" data-device="web">最終更新 ' +
+                                (p.updated || "—") +
+                                "</span>" +
+                                '<button class="edit" data-edit="' +
+                                p.id +
+                                '">変更</button></div>'
+                            );
+                        })
+                        .join("");
+
+                    el("historyList").innerHTML = history
+                        .map(function (h) {
+                            return (
+                                '<div class="history-row"><span>' +
+                                h.what +
+                                '</span><span class="when">' +
+                                h.when +
+                                "</span></div>"
+                            );
+                        })
+                        .join("");
+                }
+
+                ("",
+                    "カード番号による不具合を解消したい",
+                    "メールアドレスの変更ができない");
+                /* ---------- 変更フォームの定義 ---------- */
+                var FORMS = {
+                    address: {
+                        title: "住所の変更",
+                        note: "郵便番号を入力して「住所を自動入力」を押すと、市区町村まで自動で入ります。",
+                        html:
+                            '<label class="flabel" for="zip">郵便番号</label>' +
+                            '<div class="row2"><input type="text" id="zip" inputmode="numeric" placeholder="1540001" maxlength="8" />' +
+                            '<button class="btn-sub" id="zipBtn">住所を自動入力</button></div>' +
+                            '<div class="hint">ハイフンはあってもなくても構いません。例：154-0001</div>' +
+                            '<div class="err" id="zipErr"></div>' +
+                            '<label class="flabel" for="addr1">市区町村まで</label>' +
+                            '<input type="text" id="addr1" placeholder="自動で入力されます" />' +
+                            '<label class="flabel" for="addr2">番地・建物名</label>' +
+                            '<input type="text" id="addr2" placeholder="1-2-3 〇〇マンション101" />' +
+                            '<div class="err" id="addrErr"></div>',
+                        init: function (done) {
+                            var zip = el("zip"),
+                                a1 = el("addr1"),
+                                a2 = el("addr2");
+                            function normalize(v) {
+                                return v.replace(/[^0-9]/g, "");
+                            }
+                            function lookup() {
+                                var k = normalize(zip.value);
+                                if (k.length !== 7) {
+                                    zip.className = "ng";
+                                    show(
+                                        "zipErr",
+                                        "郵便番号は7桁の数字で入力してください（現在" +
+                                            k.length +
+                                            "桁）。",
+                                    );
+                                    return;
+                                }
+                                if (!ZIP[k]) {
+                                    zip.className = "ng";
+                                    show(
+                                        "zipErr",
+                                        "この郵便番号に該当する住所が見つかりませんでした。市区町村を直接入力してください。",
+                                    );
+                                    a1.focus();
+                                    return;
+                                }
+                                zip.className = "ok";
+                                hide("zipErr");
+                                a1.value = ZIP[k];
+                                a1.className = "ok";
+                                a2.focus();
+                                RK.toast("住所を自動入力しました");
+                            }
+                            el("zipBtn").addEventListener("click", lookup);
+                            zip.addEventListener("input", function () {
+                                var k = normalize(zip.value);
+                                zip.value =
+                                    k.length > 3
+                                        ? k.slice(0, 3) + "-" + k.slice(3, 7)
+                                        : k;
+                                if (k.length === 7) lookup();
+                                else {
+                                    zip.className = "";
+                                    hide("zipErr");
+                                }
+                            });
+                            [a1, a2].forEach(function (i) {
+                                i.addEventListener("input", check);
+                            });
+                            function check() {
+                                var ok =
+                                    a1.value.trim().length > 0 &&
+                                    a2.value.trim().length > 0;
+                                if (!ok && (a1.value || a2.value))
+                                    show(
+                                        "addrErr",
+                                        "市区町村と番地の両方を入力してください。",
+                                    );
+                                else hide("addrErr");
+                                done(ok);
+                            }
+                            check();
+                        },
+                    },
+
+                    card: {
+                        title: "カード番号の変更",
+                        note: "数字を入力するだけで、4桁ごとに自動で区切られます。",
+                        html:
+                            '<label class="flabel" for="cardno">カード番号</label>' +
+                            '<input type="text" id="cardno" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19" />' +
+                            '<div class="hint">カード表面の16桁の番号を入力してください。区切りは自動で入ります。</div>' +
+                            '<div class="err" id="cardErr"></div>' +
+                            '<label class="flabel" for="expiry">有効期限（月／年）</label>' +
+                            '<input type="text" id="expiry" inputmode="numeric" placeholder="09 / 30" maxlength="7" />' +
+                            '<div class="err" id="expErr"></div>',
+                        init: function (done) {
+                            var c = el("cardno"),
+                                e = el("expiry");
+                            function state() {
+                                var digits = c.value.replace(/\D/g, "");
+                                var exp = e.value.replace(/\D/g, "");
+                                var cOk = digits.length === 16,
+                                    eOk =
+                                        exp.length === 4 &&
+                                        Number(exp.slice(0, 2)) >= 1 &&
+                                        Number(exp.slice(0, 2)) <= 12;
+                                c.className =
+                                    digits.length === 0
+                                        ? ""
+                                        : cOk
+                                          ? "ok"
+                                          : "ng";
+                                e.className =
+                                    exp.length === 0 ? "" : eOk ? "ok" : "ng";
+                                if (digits.length > 0 && !cOk)
+                                    show(
+                                        "cardErr",
+                                        "カード番号は16桁です。あと" +
+                                            (16 - digits.length) +
+                                            "桁入力してください。",
+                                    );
+                                else hide("cardErr");
+                                if (exp.length > 0 && !eOk)
+                                    show(
+                                        "expErr",
+                                        "有効期限は「月2桁／年2桁」で入力してください（月は01〜12）。",
+                                    );
+                                else hide("expErr");
+                                done(cOk && eOk);
+                            }
+                            c.addEventListener("input", function () {
+                                var d = c.value.replace(/\D/g, "").slice(0, 16);
+                                c.value = d.replace(/(.{4})/g, "$1 ").trim();
+                                state();
+                            });
+                            e.addEventListener("input", function () {
+                                var d = e.value.replace(/\D/g, "").slice(0, 4);
+                                e.value =
+                                    d.length > 2
+                                        ? d.slice(0, 2) + " / " + d.slice(2)
+                                        : d;
+                                state();
+                            });
+                            state();
+                        },
+                    },
+
+                    email: {
+                        title: "メールアドレスの変更",
+                        note: "入力しながら形式をその場で確認します。",
+                        html:
+                            '<label class="flabel" for="mail">新しいメールアドレス</label>' +
+                            '<input type="email" id="mail" placeholder="example@rakuten.co.jp" />' +
+                            '<div class="err" id="mailErr"></div>' +
+                            '<label class="flabel" for="mail2">確認のためもう一度</label>' +
+                            '<input type="email" id="mail2" placeholder="もう一度入力してください" />' +
+                            '<div class="err" id="mail2Err"></div>',
+                        init: function (done) {
+                            var a = el("mail"),
+                                b = el("mail2");
+                            var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            function state() {
+                                var aOk = re.test(a.value),
+                                    bOk =
+                                        a.value === b.value &&
+                                        b.value.length > 0;
+                                a.className = a.value
+                                    ? aOk
+                                        ? "ok"
+                                        : "ng"
+                                    : "";
+                                b.className = b.value
+                                    ? bOk
+                                        ? "ok"
+                                        : "ng"
+                                    : "";
+                                if (a.value && !aOk)
+                                    show(
+                                        "mailErr",
+                                        "メールアドレスの形式が正しくありません（@ とドメインが必要です）。",
+                                    );
+                                else hide("mailErr");
+                                if (b.value && !bOk)
+                                    show(
+                                        "mail2Err",
+                                        "上のメールアドレスと一致していません。",
+                                    );
+                                else hide("mail2Err");
+                                done(aOk && bOk);
+                            }
+                            [a, b].forEach(function (i) {
+                                i.addEventListener("input", state);
+                            });
+                            state();
+                        },
+                    },
+
+                    password: {
+                        title: "パスワードの変更",
+                        note: "8文字以上で、英字と数字の両方を含めてください。",
+                        html:
+                            '<label class="flabel" for="pw">新しいパスワード</label>' +
+                            '<input type="password" id="pw" placeholder="8文字以上" />' +
+                            '<div class="err" id="pwErr"></div>' +
+                            '<label class="flabel" for="pw2">確認のためもう一度</label>' +
+                            '<input type="password" id="pw2" />' +
+                            '<div class="err" id="pw2Err"></div>',
+                        init: function (done) {
+                            var a = el("pw"),
+                                b = el("pw2");
+                            function state() {
+                                var lenOk = a.value.length >= 8;
+                                var mixOk =
+                                    /[A-Za-z]/.test(a.value) &&
+                                    /[0-9]/.test(a.value);
+                                var aOk = lenOk && mixOk,
+                                    bOk =
+                                        a.value === b.value &&
+                                        b.value.length > 0;
+                                a.className = a.value
+                                    ? aOk
+                                        ? "ok"
+                                        : "ng"
+                                    : "";
+                                b.className = b.value
+                                    ? bOk
+                                        ? "ok"
+                                        : "ng"
+                                    : "";
+                                if (a.value && !aOk) {
+                                    show(
+                                        "pwErr",
+                                        !lenOk
+                                            ? "あと" +
+                                                  (8 - a.value.length) +
+                                                  "文字必要です。"
+                                            : "英字と数字の両方を含めてください。",
+                                    );
+                                } else hide("pwErr");
+                                if (b.value && !bOk)
+                                    show(
+                                        "pw2Err",
+                                        "上のパスワードと一致していません。",
+                                    );
+                                else hide("pw2Err");
+                                done(aOk && bOk);
+                            }
+                            [a, b].forEach(function (i) {
+                                i.addEventListener("input", state);
+                            });
+                            state();
+                        },
+                    },
+
+                    phone: {
+                        title: "電話番号の変更",
+                        note: "数字だけ入力すれば、自動でハイフンが入ります。",
+                        html:
+                            '<label class="flabel" for="tel">新しい電話番号</label>' +
+                            '<input type="tel" id="tel" inputmode="numeric" placeholder="090-1234-5678" maxlength="13" />' +
+                            '<div class="err" id="telErr"></div>',
+                        init: function (done) {
+                            var t = el("tel");
+                            t.addEventListener("input", function () {
+                                var d = t.value.replace(/\D/g, "").slice(0, 11);
+                                t.value =
+                                    d.length > 7
+                                        ? d.slice(0, 3) +
+                                          "-" +
+                                          d.slice(3, 7) +
+                                          "-" +
+                                          d.slice(7)
+                                        : d.length > 3
+                                          ? d.slice(0, 3) + "-" + d.slice(3)
+                                          : d;
+                                var ok = d.length === 10 || d.length === 11;
+                                t.className = d.length
+                                    ? ok
+                                        ? "ok"
+                                        : "ng"
+                                    : "";
+                                if (d.length && !ok)
+                                    show(
+                                        "telErr",
+                                        "電話番号は10桁または11桁です（現在" +
+                                            d.length +
+                                            "桁）。",
+                                    );
+                                else hide("telErr");
+                                done(ok);
+                            });
+                            done(false);
+                        },
+                    },
+
+                    bank: {
+                        title: "引落口座の変更",
+                        note: "口座番号は7桁です。金融機関ごとの桁数はご確認ください。",
+                        html:
+                            '<label class="flabel" for="bankName">金融機関名</label><input type="text" id="bankName" placeholder="みずほ銀行" />' +
+                            '<label class="flabel" for="branch">支店名</label><input type="text" id="branch" placeholder="渋谷支店" />' +
+                            '<label class="flabel" for="acc">口座番号</label>' +
+                            '<input type="text" id="acc" inputmode="numeric" placeholder="1234567" maxlength="7" />' +
+                            '<div class="err" id="accErr"></div>',
+                        init: function (done) {
+                            var n = el("bankName"),
+                                br = el("branch"),
+                                a = el("acc");
+                            function state() {
+                                var d = a.value.replace(/\D/g, "").slice(0, 7);
+                                a.value = d;
+                                var aOk = d.length === 7;
+                                a.className = d.length
+                                    ? aOk
+                                        ? "ok"
+                                        : "ng"
+                                    : "";
+                                if (d.length && !aOk)
+                                    show(
+                                        "accErr",
+                                        "口座番号は7桁です（現在" +
+                                            d.length +
+                                            "桁）。",
+                                    );
+                                else hide("accErr");
+                                done(aOk && n.value.trim() && br.value.trim());
+                            }
+                            [n, br, a].forEach(function (i) {
+                                i.addEventListener("input", state);
+                            });
+                            state();
+                        },
+                    },
+
+                    name: {
+                        title: "氏名の変更",
+                        note: "戸籍上のお名前を入力してください。",
+                        html: '<label class="flabel" for="nm">新しい氏名</label><input type="text" id="nm" placeholder="楽天 太郎" />',
+                        init: function (done) {
+                            el("nm").addEventListener("input", function () {
+                                done(el("nm").value.trim().length > 0);
+                            });
+                            done(false);
+                        },
+                    },
+                    birth: {
+                        title: "生年月日の変更",
+                        note: "変更にはご本人確認が必要です。",
+                        html: '<div class="hint">生年月日の変更はチャットサポートまたは書面でのお手続きが必要です。右下のチャットからご相談ください。</div>',
+                        init: function (done) {
+                            done(false);
+                        },
+                    },
+                    secret: {
+                        title: "秘密の質問の変更",
+                        note: "パスワードを忘れたときの確認に使います。",
+                        html:
+                            '<label class="flabel" for="q">質問</label><input type="text" id="q" placeholder="例：はじめて飼ったペットの名前" />' +
+                            '<label class="flabel" for="ans">答え</label><input type="text" id="ans" placeholder="答えを入力" />',
+                        init: function (done) {
+                            function state() {
+                                done(
+                                    el("q").value.trim() &&
+                                        el("ans").value.trim(),
+                                );
+                            }
+                            [el("q"), el("ans")].forEach(function (i) {
+                                i.addEventListener("input", state);
+                            });
+                            state();
+                        },
+                    },
+                };
+
+                function show(id, msg) {
+                    var e = el(id);
+                    if (e) {
+                        e.textContent = msg;
+                        e.classList.add("show");
+                    }
+                }
+                function hide(id) {
+                    var e = el(id);
+                    if (e) e.classList.remove("show");
+                }
+
+                /* ---------- 画面遷移 ---------- */
+                function openEdit(id) {
+                    var f = FORMS[id];
+                    if (!f) return;
+                    el("editCard").innerHTML =
+                        '<div class="section-title">' +
+                        f.title +
+                        "</div>" +
+                        '<div class="section-note">' +
+                        f.note +
+                        "</div>" +
+                        f.html +
+                        '<button class="btn-primary" id="saveBtn" disabled>変更を保存</button>';
+                    el("appTitle").textContent = f.title;
+                    document
+                        .getElementById("mainScreen")
+                        .classList.remove("active");
+                    document
+                        .getElementById("editScreen")
+                        .classList.add("active");
+                    window.scrollTo(0, 0);
+
+                    var save = el("saveBtn");
+                    f.init(function (ok) {
+                        save.disabled = !ok;
+                    });
+                    save.addEventListener("click", function () {
+                        RK.toast(f.title + "を受け付けました");
+                        back();
+                    });
+                }
+
+                function back() {
+                    el("appTitle").textContent = "登録情報";
+                    document
+                        .getElementById("editScreen")
+                        .classList.remove("active");
+                    document
+                        .getElementById("mainScreen")
+                        .classList.add("active");
+                    window.scrollTo(0, 0);
+                }
+
+                el("backBtn").addEventListener("click", back);
+                document.addEventListener("click", function (e) {
+                    var b = e.target.closest && e.target.closest("[data-edit]");
+                    if (b) openEdit(b.dataset.edit);
+                });
+
+                renderList();
+
+                /* 表示設定（ユーザー種別・キャラクター）を差し込む */
+                RK.mountSettings(el("displaySettings"));
+            })();
+        </script>
+    </body>
+</html>

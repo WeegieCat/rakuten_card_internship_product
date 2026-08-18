@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>セキュリティ設定・サポート | 楽天カードアプリ改修案</title>
+  <link rel="stylesheet" href="assets/common.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --brand: #bf0000; --brand-dark: #8c0000; --warm: #e8590c; --ink: #222; --ink-2: #555; --ink-3: #888; --line: #e6e8ec; }
+    body {
+      background: #f4f5f7; color: var(--ink);
+      font-family: "Hiragino Sans", "Yu Gothic UI", -apple-system, "Noto Sans JP", Meiryo, sans-serif;
+    }
+    button { font: inherit; cursor: pointer; }
+    .num { font-variant-numeric: tabular-nums; }
+    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+
+    header.appbar {
+      background: linear-gradient(135deg, var(--brand), #e84c3d);
+      color: #fff; padding: 18px 16px; font-size: 17px; font-weight: bold; text-align: center;
+      border-radius: 0 0 24px 24px; box-shadow: 0 8px 24px rgba(191,0,0,.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .crumb {
+      display: block; margin: 12px 14px 0; font-size: 12.5px; color: var(--ink-2);
+      text-decoration: none; font-weight: 600;
+    }
+    .crumb:hover { color: var(--brand); }
+
+    .container { padding: 10px 14px; }
+
+    .banner {
+      border-radius: 12px; padding: 12px 14px; margin-bottom: 10px;
+      font-size: 12.5px; line-height: 1.65;
+    }
+    .banner-danger       { background: #fff0f0; border: 1px solid #f3b2b2; color: #b30000; }
+    .banner-warning-high { background: #fff4ec; border: 1px solid #ffd8bd; color: #9a4a00; }
+    .banner-warning-low  { background: #fffbe8; border: 1px solid #f2e2a8; color: #7a5c00; }
+
+    .card { background: #fff; border-radius: 14px; padding: 15px; margin-bottom: 14px; box-shadow: 0 3px 12px rgba(0,0,0,.07); }
+    .section-title {
+      font-size: 14.5px; font-weight: bold; color: var(--brand); margin-bottom: 4px;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .pill { font-size: 10.5px; background: var(--brand-dark); color: #fff; padding: 2px 7px; border-radius: 5px; font-weight: 700; }
+    .section-note { font-size: 11.5px; color: var(--ink-3); line-height: 1.6; }
+
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; }
+    .toggle-row .t { font-weight: bold; font-size: 13.5px; }
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; flex: none; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; background: #ccd1d8; border-radius: 999px;
+      transition: background .2s; cursor: pointer;
+    }
+    .slider::before {
+      content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .switch input:checked + .slider { background: var(--brand); }
+    .switch input:checked + .slider::before { transform: translateX(22px); }
+
+    .usage-box { background: #f7f8fb; border: 1px solid var(--line); border-radius: 12px; padding: 12px 13px; margin-top: 10px; }
+    .usage-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; padding: 4px 0; }
+    .usage-value { font-weight: bold; font-size: 14px; }
+    .over { color: var(--brand); }
+
+    .btn-secondary {
+      width: 100%; height: 44px; margin-top: 12px; background: #fff; color: var(--ink-2);
+      border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-weight: 700; transition: .15s;
+    }
+    .btn-secondary:hover { border-color: var(--brand); color: var(--brand); background: #fff0f0; }
+    .btn-primary {
+      width: 100%; height: 46px; margin-top: 12px; background: var(--brand); color: #fff;
+      border: none; border-radius: 10px; font-size: 14px; font-weight: bold;
+    }
+    .btn-primary:hover { background: var(--brand-dark); }
+
+    .score-container { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+    .score-circle {
+      width: 74px; height: 74px; border-radius: 50%; flex: none;
+      display: flex; align-items: center; justify-content: center;
+      background: conic-gradient(var(--brand) 0 70%, #eceff2 70% 100%);
+      position: relative;
+    }
+    .score-circle::after {
+      content: ""; position: absolute; inset: 8px; background: #fff; border-radius: 50%;
+    }
+    .score-text { position: relative; z-index: 1; font-weight: bold; font-size: 15px; color: var(--brand); }
+    .score-status { font-size: 13.5px; font-weight: bold; }
+
+    .checklist { list-style: none; margin-top: 12px; }
+    .checklist-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 10px 0; border-top: 1px dashed #eee; font-size: 13px;
+    }
+    .check-ok { color: #237804; font-weight: bold; margin-right: 6px; }
+    .check-ng { color: var(--warm); font-weight: bold; margin-right: 6px; }
+    .checklist-item .sub { font-size: 11px; color: var(--ink-3); margin-left: 18px; margin-top: 2px; }
+    .state-on  { font-size: 12px; color: #237804; font-weight: bold; white-space: nowrap; }
+    .state-off { font-size: 12px; color: var(--warm); font-weight: bold; white-space: nowrap; }
+
+    .wizard-field { margin-top: 12px; }
+    .wizard-field label { display: block; font-size: 12px; font-weight: bold; color: var(--ink-2); margin-bottom: 5px; }
+    .wizard-field input {
+      width: 100%; height: 44px; border: 1px solid #d9dee8; border-radius: 10px;
+      padding: 0 12px; font-size: 15px; font-family: inherit;
+    }
+    .wizard-field input:focus { outline: none; border-color: var(--brand); }
+
+    /* Web版のログイン履歴 */
+    .login-table { overflow-x: auto; margin-top: 10px; }
+    .login-table table { width: 100%; border-collapse: collapse; }
+    .login-table th, .login-table td {
+      padding: 10px 10px; text-align: left; border-bottom: 1px solid #eef1f5;
+      font-size: 12.5px; white-space: nowrap;
+    }
+    .login-table th { background: #f7f8fb; color: var(--ink-2); font-weight: bold; font-size: 11.5px; }
+    .login-table .ng { color: var(--brand); font-weight: bold; }
+    .login-table .ok { color: #237804; font-weight: bold; }
+  </style>
+</head>
+<body data-screen="security">
+
+<div class="app">
+  <header class="appbar">セキュリティ設定・サポート</header>
+  <a class="crumb" data-rk-link="profile.html" href="profile.html">← 登録情報にもどる</a>
+
+  <div class="container" data-web-cols>
+
+    <!-- 警告スタック（リスクの高い順） -->
+    <div id="banners" data-web-full></div>
+
+    <!-- 1. カード制御 -->
+    <div class="card">
+      <div class="section-title"><span>カード制御（あんしん機能）</span></div>
+      <div class="toggle-row">
+        <div>
+          <div class="t">カードの一時利用停止</div>
+          <div class="section-note">紛失時や不正利用が疑われる際、すぐにカード決済を止められます。</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="cardLock" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 2. 利用金額・通知基準 -->
+    <div class="card">
+      <div class="section-title"><span>利用金額・通知基準</span></div>
+      <div class="section-note">
+        1日の決済合計がこの金額を超えたときに通知します。使いすぎの通知（月単位）は明細画面が担当します。
+      </div>
+      <div class="usage-box">
+        <div class="usage-row"><span>1日の利用通知上限額</span><span class="usage-value num" id="dailyLimit"></span></div>
+        <div class="usage-row"><span id="lastOverLabel">直近で上限を超えた日</span><span class="usage-value num over" id="lastOverAmount"></span></div>
+        <div class="usage-row" data-tier="mid heavy"><span>今月のご利用合計</span><span class="usage-value num" id="monthUsed"></span></div>
+      </div>
+      <button class="btn-secondary" data-tier="mid heavy" id="wizardBtn">⚙️ 通知金額を設定する</button>
+      <div id="wizard" style="display:none">
+        <div class="wizard-field">
+          <label for="newLimit">1日の利用通知上限額（円）</label>
+          <input type="number" id="newLimit" min="1000" step="1000" />
+        </div>
+        <button class="btn-primary" id="saveLimit">この金額で通知する</button>
+      </div>
+    </div>
+
+    <!-- 3. ポイント失効防止（この画面が一次責任） -->
+    <div class="card">
+      <div class="section-title"><span>楽天ポイント・失効防止</span><span class="pill">あんしん通知</span></div>
+      <div class="usage-box">
+        <div class="usage-row"><span>総保有ポイント</span><span class="usage-value num" id="ptTotal"></span></div>
+        <div class="usage-row"><span style="color:#ad4e00;font-weight:bold">うち期間限定ポイント</span>
+          <span class="usage-value num" style="color:#ad4e00" id="ptLimited"></span></div>
+        <div class="usage-row" style="border-top:1px dashed #e0e0e0;margin-top:6px;padding-top:8px">
+          <span>失効予定日</span><span class="usage-value num" id="ptDate"></span></div>
+        <div class="usage-row"><span>失効までの日数</span><span class="usage-value num over" id="ptDays"></span></div>
+        <div class="usage-row" data-tier="mid heavy"><span>通常ポイントの失効予定</span>
+          <span class="usage-value num" id="ptNormal"></span></div>
+      </div>
+      <div class="section-note" style="margin-top:8px">
+        失効の<b id="alertDays"></b>日前から、この画面とTOP画面、プッシュ通知でお知らせします。
+      </div>
+      <button class="btn-primary" data-toast="ポイントの使い道を見る">失効前にポイントを使う</button>
+    </div>
+
+    <!-- 4. セキュリティ診断（ミドル以上） -->
+    <div class="card" data-tier="mid heavy">
+      <div class="section-title"><span>セキュリティ診断</span></div>
+      <div class="section-note">アカウント保護の設定状況を点数にしています。</div>
+      <div class="score-container">
+        <div class="score-circle" id="scoreCircle"><span class="score-text" id="scoreText"></span></div>
+        <div>
+          <div class="score-status" id="scoreStatus"></div>
+          <div class="section-note" style="margin-top:2px">未設定の項目を完了すると100点になります。</div>
+        </div>
+      </div>
+      <ul class="checklist" id="checklist"></ul>
+    </div>
+
+    <!-- 5. 不正利用の対応（ヘビー） -->
+    <div class="card" data-tier="heavy">
+      <div class="section-title"><span>不正利用が疑われるとき</span></div>
+      <div class="section-note">
+        身に覚えのない利用を見つけた場合は、まずカードを一時停止したうえでご連絡ください。
+        調査中の利用分はお支払いの対象から一時的に除外されます。
+      </div>
+      <button class="btn-secondary" data-toast="不正利用の申告フォームへ">不正利用を申告する</button>
+      <button class="btn-secondary" data-toast="ログイン履歴の確認画面へ">ログイン履歴を確認する</button>
+      <button class="btn-secondary" data-toast="生体認証の設定画面へ">生体認証（顔・指紋）を設定する</button>
+    </div>
+
+    <!-- Web版だけに出すログイン履歴（PC＝最重要項目＋付加項目） -->
+    <div class="card" data-device="web" data-web-full>
+      <div class="section-title"><span>ログイン履歴</span></div>
+      <div class="section-note">直近のログインです。見覚えのない端末があれば、すぐにパスワードを変更してください。</div>
+      <div class="login-table">
+        <table>
+          <thead><tr><th>日時</th><th>端末</th><th>場所</th><th>方法</th><th>結果</th></tr></thead>
+          <tbody id="loginBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/common.js"></script>
+<script>
+(function () {
+  var C = APP.C, yen = APP.yen;
+  var el = function (id) { return document.getElementById(id); };
+  var u = APP.usage(APP.MONTHS[0].key);
+  var ptDays = APP.daysUntil(C.points.limitedExpire);
+  var dailyLimit = C.dailyNotifyLimit;
+  var locked = false;
+  var over = null;
+
+  /* 設定額を変えたら超過日も計算し直す */
+  function recomputeOver() {
+    var map = APP.dailyTotals(APP.MONTHS[0].key);
+    var hit = Object.keys(map).filter(function (d) { return map[d] > dailyLimit; }).sort().pop();
+    over = hit ? { date: hit, amount: map[hit] } : null;
+  }
+
+  /* ---- 警告バナー（リスクの高い順） ---- */
+  function renderBanners() {
+    var out = "";
+    if (locked) {
+      out += '<div class="banner banner-danger">🔒 <strong>カード利用を一時停止中です</strong><br>' +
+             "カード決済は現在ロックされています。解除するには下のスイッチをオフにしてください。</div>";
+    }
+    if (over) {
+      out += '<div class="banner banner-warning-high">⚠️ <strong>1日の利用通知上限額を超えた日があります</strong><br>' +
+             RK.md(over.date) + "のご利用は " + yen(over.amount) + " で、設定額 " + yen(dailyLimit) +
+             " を超えています。明細をご確認ください。</div>";
+    }
+    if (ptDays <= C.points.alertDays) {
+      out += '<div class="banner banner-warning-low">⏳ <strong>期間限定ポイントの失効予告</strong><br>' +
+             C.points.limited.toLocaleString("ja-JP") + "pt が " + RK.md(C.points.limitedExpire) +
+             "（残り" + ptDays + "日）に失効します。</div>";
+    }
+    el("banners").innerHTML = out;
+  }
+
+  /* ---- 利用金額 ---- */
+  function renderUsage() {
+    el("dailyLimit").textContent = yen(dailyLimit);
+    el("lastOverLabel").textContent = over ? RK.md(over.date) + "のご利用（直近の超過）" : "直近で上限を超えた日";
+    el("lastOverAmount").textContent = over ? yen(over.amount) : "なし";
+    el("monthUsed").textContent = yen(u.used) + "（" + u.count + "件）";
+  }
+
+  /* ---- ポイント ---- */
+  el("ptTotal").textContent   = C.points.total.toLocaleString("ja-JP") + " pt";
+  el("ptLimited").textContent = C.points.limited.toLocaleString("ja-JP") + " pt";
+  el("ptDate").textContent    = RK.ymd(C.points.limitedExpire);
+  el("ptDays").textContent    = "あと " + ptDays + " 日";
+  el("ptNormal").textContent  = C.points.normal.toLocaleString("ja-JP") + " pt（" + RK.ymd(C.points.normalExpire) + "）";
+  el("alertDays").textContent = C.points.alertDays;
+
+  /* ---- セキュリティ診断 ---- */
+  var checks = [
+    { name: "利用額お知らせ通知", sub: "上限を超えた利用をその場でお知らせします", on: true },
+    { name: "カード一時利用停止機能", sub: "緊急時にワンタップで決済を止められます", on: true },
+    { name: "ポイント失効の事前通知", sub: "失効の" + C.points.alertDays + "日前からお知らせします", on: true },
+    { name: "生体認証（顔・指紋）", sub: "ログイン時の本人確認を強化します", on: false },
+    { name: "秘密の質問", sub: "パスワードを忘れたときの確認に使います", on: true }
+  ];
+  function renderScore() {
+    var on = checks.filter(function (c) { return c.on; }).length;
+    var score = Math.round((on / checks.length) * 100);
+    el("scoreText").textContent = score + "点";
+    el("scoreCircle").style.background = "conic-gradient(var(--brand) 0 " + score + "%, #eceff2 " + score + "% 100%)";
+    el("scoreStatus").textContent = score === 100 ? "最高水準" : score >= 70 ? "良好（対策推奨あり）" : "要対策";
+    el("checklist").innerHTML = checks.map(function (c) {
+      return '<li class="checklist-item"><div>' +
+             '<span class="' + (c.on ? "check-ok" : "check-ng") + '">' + (c.on ? "✓" : "!") + "</span><strong>" + c.name + "</strong>" +
+             '<div class="sub">' + c.sub + "</div></div>" +
+             '<span class="' + (c.on ? "state-on" : "state-off") + '">' + (c.on ? "設定済み" : "未設定") + "</span></li>";
+    }).join("");
+  }
+
+  /* ---- 操作 ---- */
+  el("cardLock").addEventListener("change", function (e) {
+    locked = e.target.checked;
+    renderBanners();
+    RK.toast(locked ? "カードを一時停止しました" : "カードの一時停止を解除しました");
+  });
+
+  el("wizardBtn").addEventListener("click", function () {
+    var w = el("wizard");
+    var open = w.style.display === "none";
+    w.style.display = open ? "block" : "none";
+    if (open) el("newLimit").value = dailyLimit;
+  });
+
+  el("saveLimit").addEventListener("click", function () {
+    var v = Number(el("newLimit").value);
+    if (!v || v < 1000) { RK.toast("1,000円以上で設定してください"); return; }
+    dailyLimit = v;
+    recomputeOver();
+    el("wizard").style.display = "none";
+    renderUsage();
+    renderBanners();
+    RK.toast("1日の利用通知上限額を " + yen(v) + " に変更しました");
+  });
+
+  /* ---- ログイン履歴（Web版のみ表示） ---- */
+  el("loginBody").innerHTML = [
+    { when: "2026/06/25 08:12", dev: "iPhone（アプリ）",   place: "東京都",   how: "生体認証なし・パスワード", ok: true },
+    { when: "2026/06/24 21:40", dev: "Windows（ブラウザ）", place: "東京都",   how: "パスワード",             ok: true },
+    { when: "2026/06/22 03:07", dev: "不明な端末",         place: "海外",     how: "パスワード",             ok: false },
+    { when: "2026/06/20 12:33", dev: "iPhone（アプリ）",   place: "神奈川県", how: "パスワード",             ok: true }
+  ].map(function (r) {
+    return "<tr><td>" + r.when + "</td><td>" + r.dev + "</td><td>" + r.place + "</td><td>" + r.how +
+           '</td><td class="' + (r.ok ? "ok" : "ng") + '">' + (r.ok ? "成功" : "失敗（要確認）") + "</td></tr>";
+  }).join("");
+
+  recomputeOver();
+  renderBanners();
+  renderUsage();
+  renderScore();
+})();
+</script>
+</body>
+</html>

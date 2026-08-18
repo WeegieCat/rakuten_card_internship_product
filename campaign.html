@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>キャンペーン一覧 | 楽天カードアプリ改修案</title>
+  <link rel="stylesheet" href="assets/common.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: #f4f5f7;
+      color: #333;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #b30000;
+      font-size: 1.55rem;
+      margin: 18px 0 12px;
+      border-bottom: 3px solid #c0c0c0;
+      padding-bottom: 10px;
+    }
+
+    .lead {
+      text-align: center;
+      color: #666;
+      margin-bottom: 18px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .mode-switch,
+    .category-switch {
+      display: flex;
+      gap: 8px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      margin-bottom: 14px;
+      position: sticky;
+      z-index: 30;
+      overflow-x: auto;
+    }
+
+    .mode-switch { top: 10px; }
+    .category-switch { top: 72px; }
+
+    .mode-switch button,
+    .category-switch button {
+      flex: 1;
+      min-width: 88px;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 8px;
+      font-size: 0.86rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: #eee;
+      color: #444;
+      white-space: nowrap;
+    }
+
+    .mode-switch button.active,
+    .category-switch button.active {
+      background: linear-gradient(90deg, #b30000, #d94d4d);
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(179,0,0,0.25);
+    }
+
+    .recommend-box {
+      background: #fff7e8;
+      border: 1px solid #f0d7a1;
+      color: #8a4b00;
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .recommend-box strong {
+      color: #b30000;
+    }
+
+    .search-area {
+      background: #fff;
+      border: 2px solid #c0c0c0;
+      border-left: 8px solid #b30000;
+      border-radius: 14px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .search-area h2 {
+      margin: 0 0 10px 0;
+      color: #b30000;
+      font-size: 1rem;
+    }
+
+    .search-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-box input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      font-size: 1rem;
+      border: 1px solid #bbb;
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      color: #333;
+    }
+
+    .search-box button {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #b30000, #d94d4d);
+      color: #fff;
+    }
+
+    .search-box button.secondary {
+      background: linear-gradient(90deg, #8d8d8d, #bfbfbf);
+      color: #222;
+    }
+
+    .search-note {
+      margin-top: 10px;
+      color: #666;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .no-result {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fff4f4;
+      color: #b30000;
+      font-weight: bold;
+      border: 1px solid #f0caca;
+      font-size: 0.9rem;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .highlight-title {
+      font-size: 1.15rem;
+      color: #b30000;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+
+    .highlight-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .highlight-card,
+    .heavy-highlight-card,
+    .summary-card {
+      position: relative;
+      background: linear-gradient(135deg, #fff5f5, #ffffff);
+      border: 2px solid #c0c0c0;
+      border-left: 8px solid #d10000;
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+    }
+
+    .highlight-card::before,
+    .heavy-highlight-card::before,
+    .summary-card::before {
+      content: "注目";
+      position: absolute;
+      top: 10px;
+      right: -30px;
+      background: #d10000;
+      color: #fff;
+      padding: 5px 30px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      transform: rotate(45deg);
+      z-index: 2;
+    }
+
+    .highlight-card-link,
+    .heavy-highlight-card a,
+    .summary-card a {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .highlight-image,
+    .heavy-highlight-card img,
+    .summary-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      background: #eee;
+    }
+
+    .highlight-content,
+    .heavy-highlight-body,
+    .summary-body {
+      padding: 15px;
+    }
+
+    .highlight-category,
+    .heavy-highlight-category,
+    .summary-category {
+      font-size: 0.82rem;
+      color: #777;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .highlight-target,
+    .heavy-highlight-target,
+    .summary-target {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .highlight-rate,
+    .heavy-highlight-rate,
+    .summary-rate {
+      font-size: 1.65rem;
+      color: #b30000;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .highlight-deadline,
+    .heavy-highlight-deadline,
+    .summary-deadline {
+      font-size: 0.92rem;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    .highlight-note,
+    .summary-note {
+      display: inline-block;
+      margin-top: 6px;
+      background: #ffe0e0;
+      color: #b30000;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: bold;
+    }
+
+    .category-section,
+    .heavy-category {
+      margin-bottom: 18px;
+    }
+
+    .category-title,
+    .heavy-category h2 {
+      background: linear-gradient(90deg, #b30000, #d94d4d);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px 12px 0 0;
+      font-size: 1rem;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .campaign-list,
+    .heavy-table-wrap {
+      background: #fff;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+
+    .campaign-item {
+      display: block;
+      padding: 14px;
+      border-bottom: 1px solid #ececec;
+      text-decoration: none;
+      color: inherit;
+      background: #fff;
+    }
+
+    .campaign-item:last-child {
+      border-bottom: none;
+    }
+
+    .campaign-item.selected {
+      background: linear-gradient(90deg, #ffd6d6, #fff0f0);
+      box-shadow: inset 5px 0 0 #d10000;
+    }
+
+    .campaign-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .campaign-name {
+      font-weight: bold;
+      color: #333;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    .campaign-rate {
+      font-weight: bold;
+      color: #b30000;
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+
+    .campaign-deadline {
+      color: #666;
+      font-size: 0.88rem;
+    }
+
+    .campaign-badge,
+    .priority-badge {
+      display: inline-block;
+      background: #d10000;
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 999px;
+      margin-top: 8px;
+    }
+
+    .heavy-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    .heavy-table th,
+    .heavy-table td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      font-size: 0.88rem;
+      vertical-align: middle;
+    }
+
+    .heavy-table th {
+      background: #efefef;
+      color: #666;
+      font-weight: bold;
+    }
+
+    .heavy-table tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .heavy-table .target-link {
+      font-weight: bold;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .heavy-rate {
+      color: #b30000;
+      font-weight: bold;
+    }
+
+    .heavy-deadline {
+      color: #666;
+    }
+
+    .priority-row {
+      background: linear-gradient(90deg, #fff0f0, #fff8f8) !important;
+    }
+
+    .selected-row {
+      background: linear-gradient(90deg, #ffd6d6, #fff0f0) !important;
+      box-shadow: inset 5px 0 0 #d10000;
+    }
+
+    .hidden-category {
+      display: none !important;
+    }
+
+    .summary-area {
+      margin-bottom: 18px;
+    }
+
+    .summary-helper {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      color: #666;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .accordion-group {
+      margin-bottom: 14px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .accordion-toggle {
+      width: 100%;
+      border: none;
+      background: linear-gradient(90deg, #b30000, #d94d4d);
+      color: #fff;
+      text-align: left;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .accordion-icon {
+      font-size: 0.9rem;
+      transition: transform 0.2s ease;
+    }
+
+    .accordion-group.open .accordion-icon {
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      display: none;
+      background: #fff;
+    }
+
+    .accordion-group.open .accordion-content {
+      display: block;
+    }
+
+    .note {
+      margin: 20px 0 28px;
+      font-size: 0.8rem;
+      color: #555;
+      line-height: 1.7;
+    }
+  
+    /* 画像が用意されていないときの代替（travel.jpg / shopping.jpg / gourmet.jpg） */
+    .img-fallback {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 180px; color: #fff; font-weight: bold;
+      font-size: 1.05rem; letter-spacing: .08em;
+      background: linear-gradient(120deg, #b30000, #e8590c);
+    }
+
+    /* Web版（上部の表示デバイス切替で切り替わる） */
+    body.device-web .container { padding: 0 20px 24px; }
+    body.device-web .view { column-count: 2; column-gap: 20px; }
+    body.device-web .view > * { break-inside: avoid; }
+    body.device-web [data-web-full] { column-span: all; }
+    body.device-web .mode-switch, body.device-web .category-switch { position: static; }
+    @media (max-width: 900px) { body.device-web .view { column-count: 1; } }
+  </style>
+</head>
+<body data-screen="campaign">
+  <div class="container">
+    <h1>キャンペーン一覧</h1>
+    <p class="lead">最初はシンプルに、使うほどおすすめ表示が育つ画面です。</p>
+
+    <div class="mode-switch" data-web-full>
+      <button id="lightBtn" class="active" onclick="setMode('light')">ライト</button>
+      <button id="heavyBtn" onclick="setMode('heavy')">ヘビー</button>
+    </div>
+
+    <div class="category-switch" data-web-full>
+      <button id="tab-all" class="active" onclick="setCategory('全体表示')">全体表示</button>
+      <button id="tab-travel" onclick="setCategory('旅行')">旅行</button>
+      <button id="tab-shopping" onclick="setCategory('ショッピング')">ショッピング</button>
+      <button id="tab-gourmet" onclick="setCategory('グルメ')">グルメ</button>
+    </div>
+
+    <div class="recommend-box" id="recommendBox" data-web-full>
+      よく利用するカテゴリを学習して、全体表示におすすめを表示します。
+    </div>
+
+    <!-- LIGHT VIEW -->
+    <div id="lightView" class="view active" data-web-cols>
+      <section class="summary-area category-全体表示" id="lightSummaryArea">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="summary-helper" id="lightSummaryHelper">
+          利用頻度をもとに、最もおすすめのジャンルを1つだけ表示します。
+        </div>
+        <div id="lightSummaryCard"></div>
+      </section>
+
+      <section class="highlight-area category-旅行">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="highlight-grid">
+          <div class="highlight-card searchable-item" data-target="Eホテル" data-category="旅行">
+            <a class="highlight-card-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="trackCategory('旅行')">
+              <img class="highlight-image" src="travel.jpg" alt="旅行の注目キャンペーン画像">
+              <div class="highlight-content">
+                <div class="highlight-category">旅行</div>
+                <div class="highlight-target">対象：Eホテル</div>
+                <div class="highlight-rate">25%</div>
+                <div class="highlight-deadline">期限：2026/7/31</div>
+                <div class="highlight-note">高還元 & 期限間近</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="highlight-area category-ショッピング hidden-category">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="highlight-grid">
+          <div class="highlight-card searchable-item" data-target="お店" data-category="ショッピング">
+            <a class="highlight-card-link" href="https://zozo.jp/" target="_blank" rel="noopener noreferrer" onclick="trackCategory('ショッピング')">
+              <img class="highlight-image" src="shopping.jpg" alt="ショッピングの注目キャンペーン画像">
+              <div class="highlight-content">
+                <div class="highlight-category">ショッピング</div>
+                <div class="highlight-target">対象：お店</div>
+                <div class="highlight-rate">6%</div>
+                <div class="highlight-deadline">期限：2026/8/20</div>
+                <div class="highlight-note">期限が近い注目枠</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="highlight-area category-グルメ hidden-category">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="highlight-grid">
+          <div class="highlight-card searchable-item" data-target="C店" data-category="グルメ">
+            <a class="highlight-card-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="trackCategory('グルメ')">
+              <img class="highlight-image" src="gourmet.jpg" alt="グルメの注目キャンペーン画像">
+              <div class="highlight-content">
+                <div class="highlight-category">グルメ</div>
+                <div class="highlight-target">対象：C店</div>
+                <div class="highlight-rate">20%</div>
+                <div class="highlight-deadline">期限：2026/7/20</div>
+                <div class="highlight-note">高還元 & 期限間近</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="search-area" data-web-full>
+        <h2>対象を検索</h2>
+        <div class="search-box">
+          <input type="text" id="targetSearch" placeholder="例：Aホテル、C店、お店" onkeyup="filterTargets()">
+          <button onclick="filterTargets()">検索</button>
+          <button class="secondary" onclick="resetSearch()">リセット</button>
+        </div>
+        <div class="search-note">対象名の一部でも検索できます。</div>
+        <div id="noResult" class="no-result">一致する対象が見つかりませんでした。</div>
+      </section>
+
+      <section class="category-全体表示">
+        <div class="accordion-group" id="accordion-light-travel">
+          <button class="accordion-toggle" onclick="toggleAccordion('accordion-light-travel')">
+            <span>旅行</span><span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="campaign-list">
+              <a class="campaign-item searchable-row" data-target="Eホテル" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('旅行')">
+                <div class="campaign-top"><div class="campaign-name">Eホテル</div><div class="campaign-rate">25%</div></div>
+                <div class="campaign-deadline">期限：2026/7/31</div>
+                <div class="campaign-badge">注目</div>
+              </a>
+              <a class="campaign-item searchable-row" data-target="Bホテル" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/9217?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('旅行')">
+                <div class="campaign-top"><div class="campaign-name">Bホテル</div><div class="campaign-rate">15%</div></div>
+                <div class="campaign-deadline">期限：2026/7/31</div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-group" id="accordion-light-shopping">
+          <button class="accordion-toggle" onclick="toggleAccordion('accordion-light-shopping')">
+            <span>ショッピング</span><span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="campaign-list">
+              <a class="campaign-item searchable-row" data-target="お店" href="https://zozo.jp/" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('ショッピング')">
+                <div class="campaign-top"><div class="campaign-name">お店</div><div class="campaign-rate">6%</div></div>
+                <div class="campaign-deadline">期限：2026/8/20</div>
+                <div class="campaign-badge">注目</div>
+              </a>
+              <a class="campaign-item searchable-row" data-target="あ店" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('ショッピング')">
+                <div class="campaign-top"><div class="campaign-name">あ店</div><div class="campaign-rate">8%</div></div>
+                <div class="campaign-deadline">期限：2026/10/15</div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-group" id="accordion-light-gourmet">
+          <button class="accordion-toggle" onclick="toggleAccordion('accordion-light-gourmet')">
+            <span>グルメ</span><span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="campaign-list">
+              <a class="campaign-item searchable-row" data-target="C店" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('グルメ')">
+                <div class="campaign-top"><div class="campaign-name">C店</div><div class="campaign-rate">20%</div></div>
+                <div class="campaign-deadline">期限：2026/7/20</div>
+                <div class="campaign-badge">注目</div>
+              </a>
+              <a class="campaign-item searchable-row" data-target="D店" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Fexception5251%2Fex-x01028%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('グルメ')">
+                <div class="campaign-top"><div class="campaign-name">D店</div><div class="campaign-rate">10%</div></div>
+                <div class="campaign-deadline">期限：2026/10/5</div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="category-section category-旅行">
+        <div class="category-title">旅行</div>
+        <div class="campaign-list">
+          <a class="campaign-item searchable-row" data-target="Eホテル" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('旅行')">
+            <div class="campaign-top"><div class="campaign-name">Eホテル</div><div class="campaign-rate">25%</div></div>
+            <div class="campaign-deadline">期限：2026/7/31</div>
+            <div class="campaign-badge">注目</div>
+          </a>
+          <a class="campaign-item searchable-row" data-target="Bホテル" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/9217?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('旅行')">
+            <div class="campaign-top"><div class="campaign-name">Bホテル</div><div class="campaign-rate">15%</div></div>
+            <div class="campaign-deadline">期限：2026/7/31</div>
+          </a>
+        </div>
+      </section>
+
+      <section class="category-section category-ショッピング hidden-category">
+        <div class="category-title">ショッピング</div>
+        <div class="campaign-list">
+          <a class="campaign-item searchable-row" data-target="お店" href="https://zozo.jp/" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('ショッピング')">
+            <div class="campaign-top"><div class="campaign-name">お店</div><div class="campaign-rate">6%</div></div>
+            <div class="campaign-deadline">期限：2026/8/20</div>
+            <div class="campaign-badge">注目</div>
+          </a>
+          <a class="campaign-item searchable-row" data-target="あ店" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('ショッピング')">
+            <div class="campaign-top"><div class="campaign-name">あ店</div><div class="campaign-rate">8%</div></div>
+            <div class="campaign-deadline">期限：2026/10/15</div>
+          </a>
+        </div>
+      </section>
+
+      <section class="category-section category-グルメ hidden-category">
+        <div class="category-title">グルメ</div>
+        <div class="campaign-list">
+          <a class="campaign-item searchable-row" data-target="C店" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('グルメ')">
+            <div class="campaign-top"><div class="campaign-name">C店</div><div class="campaign-rate">20%</div></div>
+            <div class="campaign-deadline">期限：2026/7/20</div>
+            <div class="campaign-badge">注目</div>
+          </a>
+          <a class="campaign-item searchable-row" data-target="D店" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Fexception5251%2Fex-x01028%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="selectItem(this); trackCategory('グルメ')">
+            <div class="campaign-top"><div class="campaign-name">D店</div><div class="campaign-rate">10%</div></div>
+            <div class="campaign-deadline">期限：2026/10/5</div>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- HEAVY VIEW -->
+    <div id="heavyView" class="view" data-web-cols>
+      <section class="summary-area category-全体表示" id="heavySummaryArea">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="summary-helper" id="heavySummaryHelper">
+          利用頻度をもとに、最もおすすめのジャンルを1つだけ表示します。
+        </div>
+        <div id="heavySummaryCard"></div>
+      </section>
+
+      <section class="heavy-highlight-area category-旅行">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="highlight-grid">
+          <div class="heavy-highlight-card searchable-item" data-target="Eホテル" data-category="旅行">
+            <a href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="trackCategory('旅行')">
+              <img src="travel.jpg" alt="旅行の注目キャンペーン画像">
+              <div class="heavy-highlight-body">
+                <div class="heavy-highlight-category">旅行</div>
+                <div class="heavy-highlight-target">対象：Eホテル</div>
+                <div class="heavy-highlight-rate">25%</div>
+                <div class="heavy-highlight-deadline">期限：2026/7/31</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="heavy-highlight-area category-ショッピング hidden-category">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="highlight-grid">
+          <div class="heavy-highlight-card searchable-item" data-target="お店" data-category="ショッピング">
+            <a href="https://zozo.jp/" target="_blank" rel="noopener noreferrer" onclick="trackCategory('ショッピング')">
+              <img src="shopping.jpg" alt="ショッピングの注目キャンペーン画像">
+              <div class="heavy-highlight-body">
+                <div class="heavy-highlight-category">ショッピング</div>
+                <div class="heavy-highlight-target">対象：お店</div>
+                <div class="heavy-highlight-rate">6%</div>
+                <div class="heavy-highlight-deadline">期限：2026/8/20</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="heavy-highlight-area category-グルメ hidden-category">
+        <div class="highlight-title">注目キャンペーン</div>
+        <div class="highlight-grid">
+          <div class="heavy-highlight-card searchable-item" data-target="C店" data-category="グルメ">
+            <a href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="trackCategory('グルメ')">
+              <img src="gourmet.jpg" alt="グルメの注目キャンペーン画像">
+              <div class="heavy-highlight-body">
+                <div class="heavy-highlight-category">グルメ</div>
+                <div class="heavy-highlight-target">対象：C店</div>
+                <div class="heavy-highlight-rate">20%</div>
+                <div class="heavy-highlight-deadline">期限：2026/7/20</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="search-area" data-web-full>
+        <h2>対象を検索</h2>
+        <div class="search-box">
+          <input type="text" id="targetSearchHeavy" placeholder="例：Aホテル、C店、お店" onkeyup="syncSearchFromHeavy()">
+          <button onclick="syncSearchFromHeavy()">検索</button>
+          <button class="secondary" onclick="resetSearchHeavy()">リセット</button>
+        </div>
+        <div class="search-note">対象名の一部でも検索できます。</div>
+      </section>
+
+      <section class="category-全体表示">
+        <div class="accordion-group" id="accordion-heavy-travel">
+          <button class="accordion-toggle" onclick="toggleAccordion('accordion-heavy-travel')">
+            <span>旅行</span><span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="heavy-table-wrap">
+              <table class="heavy-table">
+                <thead>
+                  <tr><th>対象</th><th>還元率</th><th>期限</th></tr>
+                </thead>
+                <tbody>
+                  <tr class="priority-row searchable-row" data-target="Eホテル">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Eホテル</a></td>
+                    <td class="heavy-rate">25% <span class="priority-badge">注目</span></td>
+                    <td class="heavy-deadline">2026/7/31</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="Bホテル">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/9217?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Bホテル</a></td>
+                    <td class="heavy-rate">15%</td>
+                    <td class="heavy-deadline">2026/7/31</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="Aホテル">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Aホテル</a></td>
+                    <td class="heavy-rate">10%</td>
+                    <td class="heavy-deadline">2026/9/30</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="Cホテル">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/178484?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Cホテル</a></td>
+                    <td class="heavy-rate">7%</td>
+                    <td class="heavy-deadline">2026/9/15</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="Dホテル">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/184617?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Dホテル</a></td>
+                    <td class="heavy-rate">5%</td>
+                    <td class="heavy-deadline">2026/8/10</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-group" id="accordion-heavy-shopping">
+          <button class="accordion-toggle" onclick="toggleAccordion('accordion-heavy-shopping')">
+            <span>ショッピング</span><span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="heavy-table-wrap">
+              <table class="heavy-table">
+                <thead>
+                  <tr><th>対象</th><th>還元率</th><th>期限</th></tr>
+                </thead>
+                <tbody>
+                  <tr class="searchable-row" data-target="え店">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">え店</a></td>
+                    <td class="heavy-rate">15%</td>
+                    <td class="heavy-deadline">2026/12/25</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="い店">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">い店</a></td>
+                    <td class="heavy-rate">12%</td>
+                    <td class="heavy-deadline">2026/11/30</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="あ店">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">あ店</a></td>
+                    <td class="heavy-rate">8%</td>
+                    <td class="heavy-deadline">2026/10/15</td>
+                  </tr>
+                  <tr class="priority-row searchable-row" data-target="お店">
+                    <td><a class="target-link" href="https://zozo.jp/" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">お店</a></td>
+                    <td class="heavy-rate">6% <span class="priority-badge">注目</span></td>
+                    <td class="heavy-deadline">2026/8/20</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="う店">
+                    <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">う店</a></td>
+                    <td class="heavy-rate">2%</td>
+                    <td class="heavy-deadline">2027/1/31</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-group" id="accordion-heavy-gourmet">
+          <button class="accordion-toggle" onclick="toggleAccordion('accordion-heavy-gourmet')">
+            <span>グルメ</span><span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="heavy-table-wrap">
+              <table class="heavy-table">
+                <thead>
+                  <tr><th>対象</th><th>還元率</th><th>期限</th></tr>
+                </thead>
+                <tbody>
+                  <tr class="priority-row searchable-row" data-target="C店">
+                    <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">C店</a></td>
+                    <td class="heavy-rate">20% <span class="priority-badge">注目</span></td>
+                    <td class="heavy-deadline">2026/7/20</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="D店">
+                    <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Fexception5251%2Fex-x01028%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">D店</a></td>
+                    <td class="heavy-rate">10%</td>
+                    <td class="heavy-deadline">2026/10/5</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="A店">
+                    <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fgrp07.ias.rakuten.co.jp%2Fredirect_rpp%2F%3Fs%3D80mzhtMg7vA%26l%3DbXlhtoLXAM0%26v%3D9BXO9lFCPQgrq6A5i_rUgIDPt85igmZ_0iofM_Z7TUE%26d%3D2026-08-17%26g%3DDt-7KNVaD6s%26j%3DA1gm5N5yy1s%26r%3DcRc1W3O8FTkTQdisn2vub2uaKj01NjG5V4baji9Vg9vQgO_JcPlJIjuplXM-yqZyaWMk1BfUWLE%26ii%3DhORWvIYDMPa6F_XmIb9E5Q%26si%3DbCsgLtPJ0-c%26ci%3DC0ZIeOId4uQ%26as%3DdFFQAC3K2XA%26cp%3DuWxiwVP7hNM%26lg%3DzkDsHrHm1LFTvJTBLaK-o7oX9eYhv0Tl%26ap%3D%26ft%3DITs1qSiMuGw%26e%3DIE0wiWDnCZE&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">A店</a></td>
+                    <td class="heavy-rate">5%</td>
+                    <td class="heavy-deadline">2026/8/31</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="E店">
+                    <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff052132-kitaakita%2Fc06003%2F%3FvariantId%3D00_foap-30306_m-sss&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">E店</a></td>
+                    <td class="heavy-rate">4%</td>
+                    <td class="heavy-deadline">2026/9/1</td>
+                  </tr>
+                  <tr class="searchable-row" data-target="B店">
+                    <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff012246-chitose%2Fci007%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">B店</a></td>
+                    <td class="heavy-rate">3%</td>
+                    <td class="heavy-deadline">2026/12/31</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="heavy-category category-旅行" data-web-full>
+        <h2>旅行</h2>
+        <div class="heavy-table-wrap">
+          <table class="heavy-table">
+            <thead><tr><th>対象</th><th>還元率</th><th>期限</th></tr></thead>
+            <tbody>
+              <tr class="priority-row searchable-row" data-target="Eホテル">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Eホテル</a></td>
+                <td class="heavy-rate">25% <span class="priority-badge">注目</span></td>
+                <td class="heavy-deadline">2026/7/31</td>
+              </tr>
+              <tr class="searchable-row" data-target="Bホテル">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/9217?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Bホテル</a></td>
+                <td class="heavy-rate">15%</td>
+                <td class="heavy-deadline">2026/7/31</td>
+              </tr>
+              <tr class="searchable-row" data-target="Aホテル">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Aホテル</a></td>
+                <td class="heavy-rate">10%</td>
+                <td class="heavy-deadline">2026/9/30</td>
+              </tr>
+              <tr class="searchable-row" data-target="Cホテル">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/178484?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Cホテル</a></td>
+                <td class="heavy-rate">7%</td>
+                <td class="heavy-deadline">2026/9/15</td>
+              </tr>
+              <tr class="searchable-row" data-target="Dホテル">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hotelinfo/plan/184617?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('旅行')">Dホテル</a></td>
+                <td class="heavy-rate">5%</td>
+                <td class="heavy-deadline">2026/8/10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="heavy-category category-ショッピング hidden-category" data-web-full>
+        <h2>ショッピング</h2>
+        <div class="heavy-table-wrap">
+          <table class="heavy-table">
+            <thead><tr><th>対象</th><th>還元率</th><th>期限</th></tr></thead>
+            <tbody>
+              <tr class="searchable-row" data-target="え店">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">え店</a></td>
+                <td class="heavy-rate">15%</td>
+                <td class="heavy-deadline">2026/12/25</td>
+              </tr>
+              <tr class="searchable-row" data-target="い店">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">い店</a></td>
+                <td class="heavy-rate">12%</td>
+                <td class="heavy-deadline">2026/11/30</td>
+              </tr>
+              <tr class="searchable-row" data-target="あ店">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">あ店</a></td>
+                <td class="heavy-rate">8%</td>
+                <td class="heavy-deadline">2026/10/15</td>
+              </tr>
+              <tr class="priority-row searchable-row" data-target="お店">
+                <td><a class="target-link" href="https://zozo.jp/" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">お店</a></td>
+                <td class="heavy-rate">6% <span class="priority-badge">注目</span></td>
+                <td class="heavy-deadline">2026/8/20</td>
+              </tr>
+              <tr class="searchable-row" data-target="う店">
+                <td><a class="target-link" href="https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('ショッピング')">う店</a></td>
+                <td class="heavy-rate">2%</td>
+                <td class="heavy-deadline">2027/1/31</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="heavy-category category-グルメ hidden-category" data-web-full>
+        <h2>グルメ</h2>
+        <div class="heavy-table-wrap">
+          <table class="heavy-table">
+            <thead><tr><th>対象</th><th>還元率</th><th>期限</th></tr></thead>
+            <tbody>
+              <tr class="priority-row searchable-row" data-target="C店">
+                <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">C店</a></td>
+                <td class="heavy-rate">20% <span class="priority-badge">注目</span></td>
+                <td class="heavy-deadline">2026/7/20</td>
+              </tr>
+              <tr class="searchable-row" data-target="D店">
+                <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Fexception5251%2Fex-x01028%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">D店</a></td>
+                <td class="heavy-rate">10%</td>
+                <td class="heavy-deadline">2026/10/5</td>
+              </tr>
+              <tr class="searchable-row" data-target="A店">
+                <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fgrp07.ias.rakuten.co.jp%2Fredirect_rpp%2F%3Fs%3D80mzhtMg7vA%26l%3DbXlhtoLXAM0%26v%3D9BXO9lFCPQgrq6A5i_rUgIDPt85igmZ_0iofM_Z7TUE%26d%3D2026-08-17%26g%3DDt-7KNVaD6s%26j%3DA1gm5N5yy1s%26r%3DcRc1W3O8FTkTQdisn2vub2uaKj01NjG5V4baji9Vg9vQgO_JcPlJIjuplXM-yqZyaWMk1BfUWLE%26ii%3DhORWvIYDMPa6F_XmIb9E5Q%26si%3DbCsgLtPJ0-c%26ci%3DC0ZIeOId4uQ%26as%3DdFFQAC3K2XA%26cp%3DuWxiwVP7hNM%26lg%3DzkDsHrHm1LFTvJTBLaK-o7oX9eYhv0Tl%26ap%3D%26ft%3DITs1qSiMuGw%26e%3DIE0wiWDnCZE&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">A店</a></td>
+                <td class="heavy-rate">5%</td>
+                <td class="heavy-deadline">2026/8/31</td>
+              </tr>
+              <tr class="searchable-row" data-target="E店">
+                <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff052132-kitaakita%2Fc06003%2F%3FvariantId%3D00_foap-30306_m-sss&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">E店</a></td>
+                <td class="heavy-rate">4%</td>
+                <td class="heavy-deadline">2026/9/1</td>
+              </tr>
+              <tr class="searchable-row" data-target="B店">
+                <td><a class="target-link" href="https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff012246-chitose%2Fci007%2F&redirectproxy=1" target="_blank" rel="noopener noreferrer" onclick="highlightRow(this); trackCategory('グルメ')">B店</a></td>
+                <td class="heavy-rate">3%</td>
+                <td class="heavy-deadline">2026/12/31</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="note">
+      ※ 全体表示タブではおすすめ注目と各カテゴリの折りたたみ表示を行います。<br>
+      ※ ヘビーの全体表示では各カテゴリの全対象を表示します。<br>
+      ※ 画像は `travel.jpg` `shopping.jpg` `gourmet.jpg` を HTML と同じフォルダに置いてください。
+    </div>
+  </div>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/common.js"></script>
+  <script>
+    let currentMode = 'light';
+    let currentCategory = '全体表示';
+
+    const recommendationData = {
+      '旅行': {
+        image: 'travel.jpg',
+        alt: '旅行の注目キャンペーン画像',
+        target: 'Eホテル',
+        rate: '25%',
+        deadline: '2026/7/31',
+        url: 'https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu'
+      },
+      'ショッピング': {
+        image: 'shopping.jpg',
+        alt: 'ショッピングの注目キャンペーン画像',
+        target: 'お店',
+        rate: '6%',
+        deadline: '2026/8/20',
+        url: 'https://zozo.jp/'
+      },
+      'グルメ': {
+        image: 'gourmet.jpg',
+        alt: 'グルメの注目キャンペーン画像',
+        target: 'C店',
+        rate: '20%',
+        deadline: '2026/7/20',
+        url: 'https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1'
+      }
+    };
+
+    function getRecommendedCategory() {
+      const stats = JSON.parse(localStorage.getItem('campaignUsageStats') || '{}');
+      const entries = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+      if (entries.length === 0) return '旅行';
+      return entries[0][0];
+    }
+
+    function renderSummaryCards() {
+      const recommended = getRecommendedCategory();
+      const data = recommendationData[recommended];
+
+      const cardHtml = `
+        <div class="summary-card searchable-item category-全体表示" data-target="${data.target}" data-category="${recommended}">
+          <a href="${data.url}" target="_blank" rel="noopener noreferrer" onclick="trackCategory('${recommended}')">
+            <img src="${data.image}" alt="${data.alt}">
+            <div class="summary-body">
+              <div class="summary-category">${recommended}</div>
+              <div class="summary-target">対象：${data.target}</div>
+              <div class="summary-rate">${data.rate}</div>
+              <div class="summary-deadline">期限：${data.deadline}</div>
+              <div class="summary-note">あなたに最もおすすめのジャンル</div>
+            </div>
+          </a>
+        </div>
+      `;
+
+      document.getElementById('lightSummaryCard').innerHTML = cardHtml;
+      document.getElementById('heavySummaryCard').innerHTML = cardHtml;
+
+      document.getElementById('lightSummaryHelper').innerHTML =
+        `現在のおすすめジャンルは <strong>${recommended}</strong> です。`;
+      document.getElementById('heavySummaryHelper').innerHTML =
+        `現在のおすすめジャンルは <strong>${recommended}</strong> です。`;
+
+      openRecommendedAccordion(recommended);
+    }
+
+    function openRecommendedAccordion(category) {
+      const map = {
+        '旅行': ['accordion-light-travel', 'accordion-heavy-travel'],
+        'ショッピング': ['accordion-light-shopping', 'accordion-heavy-shopping'],
+        'グルメ': ['accordion-light-gourmet', 'accordion-heavy-gourmet']
+      };
+
+      document.querySelectorAll('.accordion-group').forEach(el => el.classList.remove('open'));
+
+      if (map[category]) {
+        map[category].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('open');
+        });
+      }
+    }
+
+    function toggleAccordion(id) {
+      const target = document.getElementById(id);
+      if (target) target.classList.toggle('open');
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('lightView').classList.remove('active');
+      document.getElementById('heavyView').classList.remove('active');
+      document.getElementById('lightBtn').classList.remove('active');
+      document.getElementById('heavyBtn').classList.remove('active');
+
+      if (mode === 'light') {
+        document.getElementById('lightView').classList.add('active');
+        document.getElementById('lightBtn').classList.add('active');
+      } else {
+        document.getElementById('heavyView').classList.add('active');
+        document.getElementById('heavyBtn').classList.add('active');
+      }
+
+      syncSearchInputs();
+      applyCategoryFilter();
+      filterTargets();
+    }
+
+    function setCategory(category) {
+      currentCategory = category;
+
+      document.getElementById('tab-all').classList.remove('active');
+      document.getElementById('tab-travel').classList.remove('active');
+      document.getElementById('tab-shopping').classList.remove('active');
+      document.getElementById('tab-gourmet').classList.remove('active');
+
+      if (category === '全体表示') document.getElementById('tab-all').classList.add('active');
+      if (category === '旅行') document.getElementById('tab-travel').classList.add('active');
+      if (category === 'ショッピング') document.getElementById('tab-shopping').classList.add('active');
+      if (category === 'グルメ') document.getElementById('tab-gourmet').classList.add('active');
+
+      applyCategoryFilter();
+      updateRecommendBox();
+      filterTargets();
+    }
+
+    function applyCategoryFilter() {
+      const allBlocks = document.querySelectorAll('.category-全体表示, .category-旅行, .category-ショッピング, .category-グルメ');
+      allBlocks.forEach(el => el.classList.add('hidden-category'));
+
+      const currentBlocks = document.querySelectorAll('.category-' + currentCategory);
+      currentBlocks.forEach(el => el.classList.remove('hidden-category'));
+    }
+
+    function trackCategory(category) {
+      const key = 'campaignUsageStats';
+      const stats = JSON.parse(localStorage.getItem(key) || '{}');
+      stats[category] = (stats[category] || 0) + 1;
+      localStorage.setItem(key, JSON.stringify(stats));
+      updateRecommendBox();
+      renderSummaryCards();
+    }
+
+    function updateRecommendBox() {
+      const stats = JSON.parse(localStorage.getItem('campaignUsageStats') || '{}');
+      const entries = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+      const box = document.getElementById('recommendBox');
+
+      if (entries.length === 0) {
+        box.innerHTML = 'よく利用するカテゴリを学習して、全体表示におすすめを表示します。';
+        return;
+      }
+
+      const topCategory = entries[0][0];
+      const count = entries[0][1];
+      box.innerHTML = `<strong>おすすめ分析:</strong> もっともよく利用しているのは <strong>${topCategory}</strong>（${count}回）です。`;
+    }
+
+    function getCurrentKeyword() {
+      const lightInput = document.getElementById('targetSearch');
+      const heavyInput = document.getElementById('targetSearchHeavy');
+      return (currentMode === 'light' ? lightInput.value : heavyInput.value).toLowerCase().trim();
+    }
+
+    function syncSearchInputs() {
+      const lightInput = document.getElementById('targetSearch');
+      const heavyInput = document.getElementById('targetSearchHeavy');
+      if (currentMode === 'light') {
+        heavyInput.value = lightInput.value;
+      } else {
+        lightInput.value = heavyInput.value;
+      }
+    }
+
+    function syncSearchFromHeavy() {
+      const heavyInput = document.getElementById('targetSearchHeavy');
+      document.getElementById('targetSearch').value = heavyInput.value;
+      filterTargets();
+    }
+
+    function resetSearchHeavy() {
+      document.getElementById('targetSearchHeavy').value = '';
+      document.getElementById('targetSearch').value = '';
+      filterTargets();
+      clearSelectedItem();
+      clearSelectedRow();
+    }
+
+    function filterTargets() {
+      syncSearchInputs();
+      const keyword = getCurrentKeyword();
+      const rows = document.querySelectorAll('.searchable-row');
+      const cards = document.querySelectorAll('.searchable-item');
+      const noResult = document.getElementById('noResult');
+
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const target = row.dataset.target.toLowerCase();
+        const matched = keyword === '' || target.includes(keyword);
+
+        if (row.classList.contains('campaign-item')) {
+          row.style.display = matched ? 'block' : 'none';
+        } else if (row.tagName === 'TR') {
+          row.style.display = matched ? '' : 'none';
+        }
+
+        if (matched && !row.closest('.hidden-category')) visibleCount++;
+      });
+
+      cards.forEach(card => {
+        const target = card.dataset.target.toLowerCase();
+        const matched = keyword === '' || target.includes(keyword);
+        card.style.display = matched ? 'block' : 'none';
+        if (matched && !card.closest('.hidden-category')) visibleCount++;
+      });
+
+      const sections = document.querySelectorAll('.category-section, .heavy-category, .highlight-area, .heavy-highlight-area, .summary-area, .accordion-group');
+      sections.forEach(section => {
+        if (section.classList.contains('hidden-category')) {
+          section.style.display = 'none';
+          return;
+        }
+
+        const rowsInSection = section.querySelectorAll('.searchable-row');
+        const cardsInSection = section.querySelectorAll('.searchable-item');
+
+        const hasVisibleRow = Array.from(rowsInSection).some(item => item.style.display !== 'none');
+        const hasVisibleCard = Array.from(cardsInSection).some(item => item.style.display !== 'none');
+
+        if (rowsInSection.length === 0 && cardsInSection.length === 0) {
+          section.style.display = '';
+        } else {
+          section.style.display = (hasVisibleRow || hasVisibleCard) ? '' : 'none';
+        }
+      });
+
+      noResult.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    function resetSearch() {
+      document.getElementById('targetSearch').value = '';
+      document.getElementById('targetSearchHeavy').value = '';
+      filterTargets();
+      clearSelectedItem();
+      clearSelectedRow();
+    }
+
+    function selectItem(element) {
+      clearSelectedItem();
+      element.classList.add('selected');
+    }
+
+    function clearSelectedItem() {
+      document.querySelectorAll('.campaign-item.selected').forEach(item => item.classList.remove('selected'));
+    }
+
+    function highlightRow(element) {
+      clearSelectedRow();
+      const row = element.closest('tr');
+      if (row) row.classList.add('selected-row');
+    }
+
+    function clearSelectedRow() {
+      document.querySelectorAll('.selected-row').forEach(row => row.classList.remove('selected-row'));
+    }
+
+    renderSummaryCards();
+    updateRecommendBox();
+    setCategory('全体表示');
+
+    /* =====================================================================
+       ここから下は、他の画面とつなぐために足した部分です。
+       上のロジック（キャンペーン画面の実装）には手を入れていません。
+       ===================================================================== */
+
+    /* (1) 画像が無い場合は、ジャンル名を出した色帯で代替する */
+    function applyImageFallback(root) {
+      (root || document).querySelectorAll("img:not([data-fb])").forEach(function (img) {
+        img.setAttribute("data-fb", "1");
+        var swap = function () {
+          var box = document.createElement("div");
+          box.className = "img-fallback";
+          var card = img.closest("[data-category]");
+          box.textContent = (card && card.dataset.category) ||
+                            (img.alt || "").replace(/の.*$/, "") || "キャンペーン";
+          if (img.parentNode) img.parentNode.replaceChild(box, img);
+        };
+        img.addEventListener("error", swap);
+        if (img.complete && img.naturalWidth === 0) swap();
+      });
+    }
+
+    /* (2) 利用実績からおすすめジャンルの初期値を入れる。
+           まだ一度もタップしていない人でも、明細でいちばん使ったジャンルが出る */
+    function seedFromSpending() {
+      try {
+        var key = "campaignUsageStats";
+        if (localStorage.getItem(key)) return false;
+        if (!window.APP || !APP.topGenre) return false;
+        var g = APP.topGenre();
+        var seed = {}; seed[g] = 1;
+        localStorage.setItem(key, JSON.stringify(seed));
+        return g;
+      } catch (e) { return false; }
+    }
+
+    /* (3) 上部の切替バー（ライト／ミドル／ヘビー）とこの画面のモードを同期する。
+           この画面は2モードなので、ミドルはライト側に寄せる */
+    function tierToMode(t) { return t === "heavy" ? "heavy" : "light"; }
+
+    function syncFromTier() {
+      if (!window.RK) return;
+      var m = tierToMode(RK.tier());
+      if (m !== currentMode) setMode(m);
+    }
+
+    /* この画面のボタンを押したら全体の種別も合わせる（他画面に持ち越す） */
+    (function hookModeButtons() {
+      var orig = setMode;
+      window.setMode = function (mode) {
+        orig(mode);
+        if (window.RK && RK.setTier && tierToMode(RK.tier()) !== mode) {
+          RK.setTier(mode === "heavy" ? "heavy" : "light");
+        }
+      };
+    })();
+
+    document.addEventListener("rk:state", function () {
+      syncFromTier();
+      applyImageFallback();
+    });
+
+    /* (4) おすすめの初期値はご利用明細から。
+           まだ一度もキャンペーンを押していない間は、その理由を出しつづける。
+           一度でも押したら、元の学習結果の表示に戻す。 */
+    var seededGenre = seedFromSpending();
+    var userTapped = false;
+
+    (function wrapRecommendBox() {
+      var origUpdate = updateRecommendBox;
+      window.updateRecommendBox = function () {
+        if (seededGenre && !userTapped) {
+          document.getElementById("recommendBox").innerHTML =
+            "<strong>おすすめ分析:</strong> ご利用明細でいちばん多いジャンルが <strong>" + seededGenre +
+            "</strong> でした。まずはこれを表示しています。" +
+            "気になるキャンペーンを押すほど、あなたに合った表示に変わります。";
+          return;
+        }
+        origUpdate();
+      };
+      var origTrack = trackCategory;
+      window.trackCategory = function (category) {
+        userTapped = true;
+        origTrack(category);
+      };
+    })();
+
+    (function initGlue() {
+      renderSummaryCards();
+      updateRecommendBox();
+      syncFromTier();
+      applyImageFallback();
+    })();
+  </script>
+</body>
+</html>
