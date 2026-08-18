@@ -145,7 +145,7 @@ body.device-web    [data-device]:not([data-device~="web"]) { display: none !impo
    ------------------------------------------------------------------------- */
 .rk-fab {
   position: fixed;
-  right: calc(50% - 240px + 16px);
+  right: max(16px, calc(50% - var(--rk-app-w) / 2 + 16px));
   bottom: calc(var(--rk-nav-h) + 14px);
   width: 58px; height: 58px; border-radius: 50%;
   cursor: pointer; overflow: hidden;
@@ -158,7 +158,6 @@ body.device-web    [data-device]:not([data-device~="web"]) { display: none !impo
   z-index: 901;
   transition: transform .15s, box-shadow .15s;
 }
-@media (max-width: 512px) { .rk-fab { right: 16px; } }
 .rk-fab:hover  { box-shadow: 0 10px 26px -6px rgba(191,0,0,.8); }
 .rk-fab:hover  .rk-fab-inner { transform: scale(1.08); }
 .rk-fab:active .rk-fab-inner { transform: scale(.94); }
@@ -166,7 +165,7 @@ body.device-web    [data-device]:not([data-device~="web"]) { display: none !impo
 
 .rk-chat {
   position: fixed;
-  right: calc(50% - 240px + 16px);
+  right: max(16px, calc(50% - var(--rk-app-w) / 2 + 16px));
   bottom: calc(var(--rk-nav-h) + 80px);
   width: min(320px, calc(100vw - 32px));
   background: #fff;
@@ -179,7 +178,6 @@ body.device-web    [data-device]:not([data-device~="web"]) { display: none !impo
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans",
                "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
 }
-@media (max-width: 512px) { .rk-chat { right: 16px; } }
 .rk-chat.open { display: block; }
 .rk-chat-head {
   background: linear-gradient(135deg, var(--rk-brand), #e84c3d);
@@ -366,3 +364,80 @@ body.device-web .rk-fab-inner { width: 56px; height: 56px; }
 .rk-set-title { font-size: 13.5px; font-weight: bold; color: var(--rk-ink); margin-bottom: 3px; }
 .rk-set-note  { font-size: 11.5px; color: var(--rk-ink-3); line-height: 1.65; margin-bottom: 9px; }
 .rk-set-note b { color: var(--rk-ink-2); }
+
+/* =========================================================================
+   12. レスポンシブ
+   端末の幅に合わせて、本体の幅・余白・文字の大きさを変えます。
+   スマホ版／Web版の切替とは別の軸で、どちらのモードでも効きます。
+   ========================================================================= */
+
+/* 画面幅ごとの基準値。ここを変えると全画面に効きます。 */
+:root {
+  --rk-app-w: 480px;   /* 本体の最大幅 */
+  --rk-pad:   14px;    /* 左右の余白 */
+}
+
+/* 小さいスマホ（iPhone SE など） */
+@media (max-width: 360px) {
+  :root { --rk-app-w: 100%; --rk-pad: 10px; --rk-nav-h: 58px; }
+}
+/* ふつうのスマホ */
+@media (min-width: 361px) and (max-width: 599px) {
+  :root { --rk-app-w: 100%; --rk-pad: 14px; }
+}
+/* タブレット。細い柱のままだと余白が広すぎるので少し広げる */
+@media (min-width: 600px) and (max-width: 899px) {
+  :root { --rk-app-w: 560px; --rk-pad: 18px; }
+}
+
+/* 本体の幅。Web版は 1120px の指定が別にあるので、スマホ版のときだけ効かせる */
+body.device-mobile .app,
+body.device-mobile .container,
+body.device-mobile .wrap { max-width: var(--rk-app-w) !important; margin-left: auto; margin-right: auto; }
+
+/* 左右の余白 */
+body.device-mobile .content,
+body.device-mobile .container,
+body.device-mobile .detail-content {
+  padding-left: var(--rk-pad) !important;
+  padding-right: var(--rk-pad) !important;
+}
+
+/* 確認用バーとナビも同じ幅に揃える */
+.rk-tierbar { max-width: var(--rk-app-w); }
+.rk-nav     { max-width: var(--rk-app-w); }
+
+/* ヘッダーの文字。狭い画面では少し小さく
+   （各ページの <style> が後に来るので、詳細度を上げて勝たせる） */
+body header.hero h1 { font-size: clamp(18px, 5.4vw, 22px); }
+body header.hero p  { font-size: clamp(11px, 3.1vw, 12px); }
+body header.hero .mini { font-size: clamp(9.5px, 2.8vw, 10.5px); }
+
+/* 2列のかたまりは、狭い画面では1列に折る */
+@media (max-width: 360px) {
+  .summary-row,
+  .form-grid,
+  .search-grid,
+  .web-summary { grid-template-columns: 1fr !important; }
+  .summary-card.main { grid-column: auto !important; }
+  .search-row { grid-template-columns: 1fr !important; }
+  .rk-charbar-switch { grid-template-columns: repeat(2, 1fr); }
+  .rk-nav a { font-size: 9px; }
+  .rk-nav a .ic { font-size: 15px; }
+}
+
+/* 横に長いものは、はみ出さずその中でスクロールさせる */
+.table-wrap, .login-table, .heavy-table-wrap { max-width: 100%; overflow-x: auto; }
+img { max-width: 100%; }
+
+/* 年末サマリー：縦に長い画面なので、ウィンドウが低いときは高さを抑える */
+.player { max-height: calc(100vh - 190px); }
+@media (min-width: 900px) { body.device-web .player { max-height: calc(100vh - 150px); } }
+
+/* Web版：画面が広いほど本体も広げる（上限 1120px） */
+@media (min-width: 900px) {
+  body.device-web .app,
+  body.device-web .container { max-width: min(1120px, 94vw) !important; }
+  body.device-web .rk-nav,
+  body.device-web .rk-tierbar { max-width: min(1120px, 94vw); }
+}
