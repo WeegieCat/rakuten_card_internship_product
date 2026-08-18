@@ -203,36 +203,36 @@
      --------------------------------------------------------------------- */
   var CAMPAIGNS = [
     /* 旅行 */
-    { genre: "旅行",         store: "Eホテル", rate: 25, to: "2026-07-31", featured: true,
+    { genre: "旅行",         store: "ホテル海風", rate: 25, to: "2026-07-31", featured: true,
       url: "https://hotel.travel.rakuten.co.jp/hotelinfo/plan/151369?f_campaign=sd260806A_kyu" },
-    { genre: "旅行",         store: "Bホテル", rate: 15, to: "2026-07-31",
+    { genre: "旅行",         store: "旅館つばき", rate: 15, to: "2026-07-31",
       url: "https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" },
-    { genre: "旅行",         store: "Aホテル", rate: 10, to: "2026-09-30",
+    { genre: "旅行",         store: "ホテル月見", rate: 10, to: "2026-09-30",
       url: "https://hotel.travel.rakuten.co.jp/hotelinfo/plan/9217?f_campaign=sd260806A_kyu" },
-    { genre: "旅行",         store: "Cホテル", rate:  7, to: "2026-09-15",
+    { genre: "旅行",         store: "スカイツアーズ", rate:  7, to: "2026-09-15",
       url: "https://hotel.travel.rakuten.co.jp/hotelinfo/plan/178484?f_campaign=sd260806A_kyu" },
-    { genre: "旅行",         store: "Dホテル", rate:  5, to: "2026-08-10",
+    { genre: "旅行",         store: "湯宿しらかば", rate:  5, to: "2026-08-10",
       url: "https://hotel.travel.rakuten.co.jp/hotelinfo/plan/184617?f_campaign=sd260806A_kyu" },
 
     /* ショッピング */
-    { genre: "ショッピング", store: "え店",   rate: 15, to: "2026-12-25", url: "https://zozo.jp/" },
-    { genre: "ショッピング", store: "い店",   rate: 12, to: "2026-11-30", url: "https://zozo.jp/" },
-    { genre: "ショッピング", store: "あ店",   rate:  8, to: "2026-10-15",
+    { genre: "ショッピング", store: "まるみ百貨店",   rate: 15, to: "2026-12-25", url: "https://zozo.jp/" },
+    { genre: "ショッピング", store: "家電のヤマオカ",   rate: 12, to: "2026-11-30", url: "https://zozo.jp/" },
+    { genre: "ショッピング", store: "アパレルモモ",   rate:  8, to: "2026-10-15",
       url: "https://hotel.travel.rakuten.co.jp/hinfo/163065/?f_campaign=sd260806A_kyu" },
-    { genre: "ショッピング", store: "お店",   rate:  6, to: "2026-08-20", featured: true,
+    { genre: "ショッピング", store: "雑貨のみどり",   rate:  6, to: "2026-08-20", featured: true,
       url: "https://zozo.jp/" },
-    { genre: "ショッピング", store: "う店",   rate:  2, to: "2027-01-31", url: "https://zozo.jp/" },
+    { genre: "ショッピング", store: "書店 文庫堂",   rate:  2, to: "2027-01-31", url: "https://zozo.jp/" },
 
     /* グルメ */
-    { genre: "グルメ",       store: "C店",    rate: 20, to: "2026-07-20", featured: true,
+    { genre: "グルメ",       store: "うなぎ処 川治",    rate: 20, to: "2026-07-20", featured: true,
       url: "https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" },
-    { genre: "グルメ",       store: "D店",    rate: 10, to: "2026-10-05",
+    { genre: "グルメ",       store: "産直市場のうか",    rate: 10, to: "2026-10-05",
       url: "https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Fexception5251%2Fex-x01028%2F&redirectproxy=1" },
-    { genre: "グルメ",       store: "A店",    rate:  5, to: "2026-08-31",
+    { genre: "グルメ",       store: "カフェソレイユ",    rate:  5, to: "2026-08-31",
       url: "https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fgrp07.ias.rakuten.co.jp%2F&redirectproxy=1" },
-    { genre: "グルメ",       store: "E店",    rate:  4, to: "2026-09-01",
+    { genre: "グルメ",       store: "精肉のまつばら",    rate:  4, to: "2026-09-01",
       url: "https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Fexception5251%2Fex-x01028%2F&redirectproxy=1" },
-    { genre: "グルメ",       store: "B店",    rate:  3, to: "2026-12-31",
+    { genre: "グルメ",       store: "スイーツ工房ハル",    rate:  3, to: "2026-12-31",
       url: "https://search.rakuten.co.jp/rat-redirect?dest=https%3A%2F%2Fitem.rakuten.co.jp%2Ff152021-nagaoka%2F75-n101%2F&redirectproxy=1" }
   ];
 
